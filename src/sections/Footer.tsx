@@ -31,13 +31,13 @@ export function Footer() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Made with</span>
             <Heart className="w-4 h-4 text-primary fill-primary" />
-            <span>by Tourettes Inc.</span>
+            <span>by Zack Tippett</span>
           </div>
         </div>
 
         <div className="mt-6 pt-6 border-t border-border text-center">
           <p className="text-xs text-muted-foreground">
-            © {currentYear} Tourettes Inc. All rights reserved.
+            © {currentYear} Zack Tippett. All rights reserved.
           </p>
         </div>
       </div>

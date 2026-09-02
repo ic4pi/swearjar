@@ -3,7 +3,7 @@ import type { Product, Show, Video } from '@/types';
 export const products: Product[] = [
   {
     id: '1',
-    name: 'Tourettes Inc. Logo Tee',
+    name: 'Zack Tippett Logo Tee',
     description: 'Classic logo tee. Bold design, premium comfort. Wear the message.',
     price: 28,
     image: '/product_tshirt_1.jpg',
@@ -76,7 +76,7 @@ export const funnyProducts: Product[] = [
   },
   {
     id: '8',
-    name: 'Tourettes Inc. Original',
+    name: 'Zack Tippett Original',
     description: 'The original. The classic. The statement.',
     price: 30,
     image: '/product_tshirt_1.jpg',

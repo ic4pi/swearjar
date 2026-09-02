@@ -39,7 +39,7 @@ const fallbackVideos: Video[] = [
 const fallbackProducts: Product[] = [
   {
     id: '1',
-    name: 'Tourettes Inc. Logo Tee',
+    name: 'Zack Tippett Logo Tee',
     description: 'Classic logo tee. Bold design, premium comfort. Wear the message.',
     price: 28,
     image: '/product_tshirt_1.jpg',

@@ -30,10 +30,10 @@
 
 ## Database Setup
 
-The database (`tourettes.db`) will be created automatically when you start the server. It includes:
+The database (`zacktippett.db`) will be created automatically when you start the server. It includes:
 - Admin credentials table
 - Shows, videos, products, donations, photos tables
-- Default admin user: `admin` / `tourettes2026`
+- Default admin user `admin`, with a password generated on first run and printed once to the server log (or set via `ADMIN_DEFAULT_PASSWORD`)
 
 ## API Endpoints
 
@@ -77,7 +77,7 @@ The database (`tourettes.db`) will be created automatically when you start the s
 
 4. **Access admin dashboard:** Use keyboard shortcut `Ctrl + Tab + Down Arrow` or visit `/dash`
 
-5. **Login with:** `admin` / `tourettes2026`
+5. **Login with:** `admin` and the password printed to the server log on first run (or your `ADMIN_DEFAULT_PASSWORD`)
 
 ## Environment Variables
 
@@ -85,7 +85,12 @@ Create a `.env` file in the backend directory:
 ```
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 PORT=3001
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+ADMIN_DEFAULT_PASSWORD=
+FRONTEND_URL=https://your-frontend.vercel.app
 ```
+`JWT_SECRET` and `STRIPE_SECRET_KEY` are required — the server refuses to start without them.
 
 ## Security Notes
 

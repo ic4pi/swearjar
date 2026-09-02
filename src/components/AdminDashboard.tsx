@@ -22,10 +22,6 @@ interface AdminDashboardProps {
   onClose: () => void;
 }
 
-// Default credentials
-const DEFAULT_USERNAME = 'admin';
-const DEFAULT_PASSWORD = 'tourettes2026';
-
 export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
@@ -686,7 +682,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               <h4 className="font-bold text-primary mb-2">Products - Step by Step:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• <strong>Add Product:</strong> Click "Add Product" button</li>
-                <li>• <strong>Name:</strong> Enter product name (e.g., "Tourettes Logo T-Shirt")</li>
+                <li>• <strong>Name:</strong> Enter product name (e.g., "Zack Tippett Logo T-Shirt")</li>
                 <li>• <strong>Price:</strong> Enter price in dollars (e.g., 25.00)</li>
                 <li>• <strong>Image URL:</strong> Use product photo URL from Printful or elsewhere</li>
                 <li>• <strong>Printful URL:</strong> Get from your Printful dashboard → Store</li>

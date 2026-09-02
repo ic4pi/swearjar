@@ -2,23 +2,35 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const sqlite3 = require('sqlite3').verbose();
 require('dotenv').config();
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+// Set FRONTEND_URL (comma-separated for multiple) to the deployed frontend origin(s).
+const defaultProdOrigins = ['https://zack-tippett.vercel.app'];
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim())
+  : defaultProdOrigins;
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://tictacs-rosy.vercel.app', 'https://tourettes-inc.vercel.app'] 
+  origin: process.env.NODE_ENV === 'production'
+    ? allowedOrigins
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
 app.use(express.json());
 
 // Database setup
-const db = new sqlite3.Database('./tourettes.db');
+const db = new sqlite3.Database('./zacktippett.db');
 
 // Create tables
 db.serialize(() => {
@@ -83,14 +95,45 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Initialize default admin if not exists
-  const defaultPassword = bcrypt.hashSync('tourettes2026', 10);
-  db.run(`INSERT OR IGNORE INTO admin_credentials (username, password) VALUES (?, ?)`, 
-    ['admin', defaultPassword]);
+  // Initialize default admin if not exists. Set ADMIN_DEFAULT_PASSWORD to control it;
+  // otherwise a random one is generated and printed once to the server log on first run.
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(9).toString('base64url');
+  const defaultPasswordHash = bcrypt.hashSync(defaultPassword, 10);
+  db.run(`INSERT OR IGNORE INTO admin_credentials (username, password) VALUES (?, ?)`,
+    ['admin', defaultPasswordHash], function (err) {
+      if (!err && this.changes > 0 && !process.env.ADMIN_DEFAULT_PASSWORD) {
+        console.warn(`\n⚠️  Generated admin password (won't be shown again): ${defaultPassword}\n`);
+      }
+    });
 });
 
-// JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// JWT Secret - required, no insecure fallback
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+
+// Very small in-memory rate limiter for the login endpoint
+const loginAttempts = new Map(); // ip -> { count, resetAt }
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+
+function rateLimitLogin(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+      return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
+    }
+    entry.count++;
+  } else {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+  }
+
+  next();
+}
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
@@ -110,7 +153,7 @@ function verifyToken(req, res, next) {
 }
 
 // Login endpoint
-app.post('/api/admin/login', async (req, res) => {
+app.post('/api/admin/login', rateLimitLogin, async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -374,16 +417,40 @@ app.delete('/api/photos/:id', verifyToken, (req, res) => {
 
 // Stripe Payment Endpoints
 
+function getProductById(id) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT id, name, price FROM products WHERE id = ?', [id], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
 // Create payment intent
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
     const { items } = req.body;
-    
-    // Calculate total amount in cents
-    const amount = items.reduce((total, item) => {
-      return total + (item.price * item.quantity * 100);
-    }, 0);
-    
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'No items provided' });
+    }
+
+    // Price and existence are looked up server-side so a client can't submit
+    // an arbitrary price/quantity for a product it doesn't actually match.
+    let amount = 0;
+    const verifiedItems = [];
+
+    for (const item of items) {
+      const product = await getProductById(item.id);
+      if (!product) {
+        return res.status(400).json({ error: `Unknown product: ${item.id}` });
+      }
+
+      const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+      amount += Math.round(product.price * quantity * 100);
+      verifiedItems.push({ id: product.id, name: product.name, quantity });
+    }
+
     // Create payment intent with metadata
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -392,11 +459,11 @@ app.post('/api/create-payment-intent', async (req, res) => {
         enabled: true,
       },
       metadata: {
-        items: JSON.stringify(items),
+        items: JSON.stringify(verifiedItems),
         customer_email: req.body.customerEmail || ''
       }
     });
-    
+
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
     console.error('Payment intent creation error:', error);

@@ -9,7 +9,9 @@ const testAPI = async () => {
       },
       body: JSON.stringify({
         username: 'admin',
-        password: 'tourettes2026'
+        // The admin password is no longer hardcoded — it's generated on first
+        // server run (see server.js) or set via ADMIN_DEFAULT_PASSWORD. Fill it in here to test.
+        password: process.env.ADMIN_PASSWORD || ''
       })
     });
     

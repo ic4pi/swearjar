@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { CreditCard } from 'lucide-react';
+import { API_BASE } from '@/lib/api-config';
 
 // Initialize Stripe with your publishable key
-const stripePromise = loadStripe(process.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
 
 interface StripeCheckoutProps {
   items: Array<{
@@ -30,7 +31,7 @@ export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProp
     
     try {
       // Create payment intent on backend
-      const response = await fetch('/api/create-payment-intent', {
+      const response = await fetch(`${API_BASE}/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

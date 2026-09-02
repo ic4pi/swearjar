@@ -72,7 +72,7 @@ export function DonateModal({ isOpen, onClose }: DonateModalProps) {
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            Tourettes Inc. is dedicated to spreading awareness and education 
+            Zack Tippett is dedicated to spreading awareness and education
             about Tourette&apos;s Syndrome through comedy.
           </p>
         </div>

@@ -1,7 +1,7 @@
 {
-  "name": "tourettes-website",
+  "name": "zack-tippett-website",
   "version": "1.0.0",
-  "description": "Backend API for Tourettes Inc website",
+  "description": "Backend API for Zack Tippett website",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
