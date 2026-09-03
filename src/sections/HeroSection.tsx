@@ -7,6 +7,10 @@ import { getNextThreeShows } from '@/utils/showUtils';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Hero keeps its own playlist small - realistically 1-2 videos, 3 at most.
+// The full list lives further down the page in "Watch the Set".
+const HERO_MAX_VIDEOS = 3;
+
 // Pulls the video ID out of a "/embed/<id>" YouTube URL for building a
 // player URL with our own autoplay/loop/mute params.
 function getYouTubeEmbedId(embedUrl: string): string | null {
@@ -20,13 +24,14 @@ export function HeroSection() {
   const blurbRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const { videos } = useVideos();
   const { shows } = useShows();
   const nextTwoShows = getNextThreeShows(shows).slice(0, 2);
 
-  // Hero always autoplays the first video; the full playlist lives further
-  // down the page in the "Watch the Set" section.
-  const heroVideo = videos[0];
+  const heroVideos = videos.slice(0, HERO_MAX_VIDEOS);
+  const safeIndex = heroVideos.length > 0 ? Math.min(activeVideoIndex, heroVideos.length - 1) : 0;
+  const heroVideo = heroVideos[safeIndex];
   const heroVideoId = heroVideo?.embedUrl ? getYouTubeEmbedId(heroVideo.embedUrl) : null;
   const heroEmbedSrc = heroVideoId
     ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&loop=1&playlist=${heroVideoId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`
@@ -48,6 +53,7 @@ export function HeroSection() {
 
   // Every video loads muted (browser autoplay policy); if sound was already
   // on, re-apply unmute once the newly selected video's player is ready.
+  // Matters here since switching videos in the playlist remounts the iframe.
   const handlePlayerLoad = () => {
     if (soundEnabled) {
       setTimeout(() => postPlayerCommand('unMute'), 300);
@@ -206,6 +212,30 @@ export function HeroSection() {
               </div>
             )}
           </div>
+
+          {/* Small playlist - hero stays capped at HERO_MAX_VIDEOS; the full
+              list is further down the page in "Watch the Set". */}
+          {heroVideos.length > 1 && (
+            <div className="flex justify-center gap-3 mt-4">
+              {heroVideos.map((video, index) => (
+                <button
+                  key={video.id}
+                  onClick={() => setActiveVideoIndex(index)}
+                  className={`shrink-0 w-24 sm:w-28 text-left rounded-lg overflow-hidden border-2 transition-colors ${
+                    index === safeIndex ? 'border-primary' : 'border-transparent hover:border-border'
+                  }`}
+                >
+                  <div className="aspect-video bg-muted">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Upcoming shows - 2 widgets, responsive positioning */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 max-w-2xl mx-auto">
