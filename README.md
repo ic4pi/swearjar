@@ -1,4 +1,4 @@
-# Zack Tippett Website
+# Zachariah Tippett Website
 
 A cutting-edge, immersive website for Zachariah Tippett - stand-up comedian, activist, and Tourette's Syndrome advocate.
 
@@ -78,7 +78,7 @@ Cash App Tag: `$TourettesInc`
 
 ## Contact
 
-Email: tourettesinc@gmail.com <!-- TODO: update to Zack's new contact email/cashapp when ready -->
+Email: tourettesinc@gmail.com <!-- TODO: update to Zachariah's new contact email/cashapp when ready -->
 Location: San Antonio, Texas
 
 ---

@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 // Set FRONTEND_URL (comma-separated for multiple) to the deployed frontend origin(s).
-const defaultProdOrigins = ['https://zack-tippett.vercel.app'];
+const defaultProdOrigins = ['https://zachariah-tippett.vercel.app'];
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim())
   : defaultProdOrigins;
@@ -30,7 +30,7 @@ app.use(cors({
 app.use(express.json());
 
 // Database setup
-const db = new sqlite3.Database('./zacktippett.db');
+const db = new sqlite3.Database('./zachariahtippett.db');
 
 // Create tables
 db.serialize(() => {
@@ -71,11 +71,15 @@ db.serialize(() => {
     price REAL,
     image TEXT,
     category TEXT,
+    series TEXT,
     variants TEXT,
     printful_url TEXT,
     sales INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+  // series ('activism' | 'funny') distinguishes the two apparel shop sections.
+  // Added after the initial release, so back it onto existing databases too.
+  db.run(`ALTER TABLE products ADD COLUMN series TEXT`, () => {});
 
   // Donations table
   db.run(`CREATE TABLE IF NOT EXISTS donations (
@@ -309,11 +313,11 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', verifyToken, (req, res) => {
-  const { id, name, description, price, image, category, variants, printfulUrl } = req.body;
-  
-  db.run(`INSERT INTO products (id, name, description, price, image, category, variants, printful_url) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
-    [id, name, description, price, image, category, JSON.stringify(variants), printfulUrl], function(err) {
+  const { id, name, description, price, image, category, series, variants, printfulUrl } = req.body;
+
+  db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants, printful_url)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, name, description, price, image, category, series || null, JSON.stringify(variants), printfulUrl], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
@@ -323,11 +327,11 @@ app.post('/api/products', verifyToken, (req, res) => {
 
 app.put('/api/products/:id', verifyToken, (req, res) => {
   const { id } = req.params;
-  const { name, description, price, image, category, variants, printfulUrl, sales } = req.body;
-  
-  db.run(`UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?, 
-          variants = ?, printful_url = ?, sales = ? WHERE id = ?`, 
-    [name, description, price, image, category, JSON.stringify(variants), printfulUrl, sales || 0, id], function(err) {
+  const { name, description, price, image, category, series, variants, printfulUrl, sales } = req.body;
+
+  db.run(`UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?,
+          series = ?, variants = ?, printful_url = ?, sales = ? WHERE id = ?`,
+    [name, description, price, image, category, series || null, JSON.stringify(variants), printfulUrl, sales || 0, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }

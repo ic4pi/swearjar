@@ -14,7 +14,7 @@
 
 3. **Configure Web Service**
    - Service Type: Web Service
-   - Name: zack-tippett-api
+   - Name: zachariah-tippett-api
    - Runtime: Node
    - Build Command: `npm install`
    - Start Command: `npm start`

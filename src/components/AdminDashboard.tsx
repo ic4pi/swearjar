@@ -301,12 +301,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const handleAddProduct = async () => {
     const newProduct: Product = {
       id: Date.now().toString(),
-      name: 'New Product',
+      name: 'New Hoodie',
       description: 'Product description',
-      price: 25,
-      image: '/product_tshirt_1.jpg',
+      price: 45,
+      image: '/product_sweater_1.jpg',
       category: 'apparel',
-      variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+      series: 'funny',
+      variants: ['Unisex Hoodie'],
       printfulUrl: 'https://www.printful.com/'
     };
 
@@ -682,7 +683,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               <h4 className="font-bold text-primary mb-2">Products - Step by Step:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• <strong>Add Product:</strong> Click "Add Product" button</li>
-                <li>• <strong>Name:</strong> Enter product name (e.g., "Zack Tippett Logo T-Shirt")</li>
+                <li>• <strong>Name:</strong> Enter product name (e.g., "Zachariah Tippett Logo Hoodie")</li>
                 <li>• <strong>Price:</strong> Enter price in dollars (e.g., 25.00)</li>
                 <li>• <strong>Image URL:</strong> Use product photo URL from Printful or elsewhere</li>
                 <li>• <strong>Printful URL:</strong> Get from your Printful dashboard → Store</li>
@@ -701,7 +702,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
             
             <div className="space-y-3">
               {products.map((product) => (
-                <div key={product.id} className="grid grid-cols-6 gap-3 p-3 bg-background border border-border rounded-lg">
+                <div key={product.id} className="grid grid-cols-7 gap-3 p-3 bg-background border border-border rounded-lg">
                   <Input
                     value={product.name}
                     onChange={(e) => handleUpdateProduct(product.id, 'name', e.target.value)}
@@ -728,6 +729,16 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     onChange={(e) => handleUpdateProduct(product.id, 'category', e.target.value)}
                     placeholder="Category"
                   />
+                  <select
+                    value={product.series || ''}
+                    onChange={(e) => handleUpdateProduct(product.id, 'series', e.target.value)}
+                    className="px-2 py-1 border rounded text-sm bg-background"
+                    disabled={product.category !== 'apparel'}
+                  >
+                    <option value="">No series (accessories)</option>
+                    <option value="activism">Activism (Tourette's)</option>
+                    <option value="funny">Funny (no category)</option>
+                  </select>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDeleteProduct(product.id)}

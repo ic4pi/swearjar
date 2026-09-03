@@ -1,87 +1,97 @@
 import type { Product, Show, Video } from '@/types';
 
+// Activism series - Tourette's awareness designs
 export const products: Product[] = [
   {
     id: '1',
-    name: 'Zack Tippett Logo Tee',
-    description: 'Classic logo tee. Bold design, premium comfort. Wear the message.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  },
-  {
-    id: '2',
     name: 'Tic & Talk Hoodie',
     description: 'Start conversations. Spread awareness. Stay comfortable.',
     price: 45,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
+    printfulUrl: 'https://www.printful.com/'
+  },
+  {
+    id: '2',
+    name: '1 in 100 Hoodie',
+    description: '1 in 100 school-aged kids have Tourette\'s. Wear the stat, start the conversation.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie'],
     printfulUrl: 'https://www.printful.com/'
   },
   {
     id: '3',
-    name: 'Laugh. Learn. Support. Tee',
-    description: 'Our mantra on a tee. Premium quality, meaningful message.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  },
-  {
-    id: '4',
-    name: 'Tourette\'s Warrior Sweatshirt',
+    name: 'Warrior Hoodie',
     description: 'For the fighters. For the advocates. For everyone.',
     price: 48,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  }
-];
-
-export const funnyProducts: Product[] = [
-  {
-    id: '5',
-    name: 'Comedy & Causes Tee',
-    description: 'Where laughter meets purpose. Quality you can feel.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
     printfulUrl: 'https://www.printful.com/'
   },
   {
-    id: '6',
+    id: '4',
     name: 'Awareness Ambassador Hoodie',
     description: 'Be an ambassador for understanding. Wear it proudly.',
     price: 45,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+    series: 'activism',
+    variants: ['Unisex Hoodie'],
+    printfulUrl: 'https://www.printful.com/'
+  }
+];
+
+// Funny series - no category, just laughs
+export const funnyProducts: Product[] = [
+  {
+    id: '5',
+    name: 'Laugh Out Loud Hoodie',
+    description: 'No cause, no message. Just funny.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
+    printfulUrl: 'https://www.printful.com/'
+  },
+  {
+    id: '6',
+    name: 'Stage Ready Hoodie',
+    description: 'Comfortable enough for the green room, funny enough for the front row.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie'],
     printfulUrl: 'https://www.printful.com/'
   },
   {
     id: '7',
-    name: 'One Laugh at a Time Tee',
-    description: 'Changing perceptions through comedy. One shirt at a time.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
+    name: 'Comedy Club Hoodie',
+    description: 'For anyone who thinks they could probably do five minutes too.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
     printfulUrl: 'https://www.printful.com/'
   },
   {
     id: '8',
-    name: 'Zack Tippett Original',
+    name: 'Zachariah Tippett Original Hoodie',
     description: 'The original. The classic. The statement.',
-    price: 30,
-    image: '/product_tshirt_1.jpg',
+    price: 48,
+    image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
+    series: 'funny',
+    variants: ['Unisex Hoodie'],
     printfulUrl: 'https://www.printful.com/'
   }
 ];

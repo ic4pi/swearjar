@@ -45,7 +45,7 @@ const SaleTracker = () => {
           className="w-full px-2 py-1 border rounded"
         >
           <option value="">Select Product</option>
-          <option value="Zack Tippett Logo Tee">Zack Tippett Logo Tee</option>
+          <option value="Zachariah Tippett Logo Hoodie">Zachariah Tippett Logo Hoodie</option>
           <option value="Tic & Talk Hoodie">Tic & Talk Hoodie</option>
         </select>
         <input

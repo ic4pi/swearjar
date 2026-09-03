@@ -30,7 +30,7 @@
 
 ## Database Setup
 
-The database (`zacktippett.db`) will be created automatically when you start the server. It includes:
+The database (`zachariahtippett.db`) will be created automatically when you start the server. It includes:
 - Admin credentials table
 - Shows, videos, products, donations, photos tables
 - Default admin user `admin`, with a password generated on first run and printed once to the server log (or set via `ADMIN_DEFAULT_PASSWORD`)

@@ -25,6 +25,8 @@ export interface Product {
   price: number;
   image: string;
   category: string;
+  /** For apparel: which shop section it belongs to ('activism' | 'funny'). Not used for accessories. */
+  series?: string;
   variants: string[];
   printfulUrl?: string;
   sales?: number;

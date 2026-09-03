@@ -55,7 +55,7 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="font-display font-black text-xl tracking-tight text-foreground hover:text-primary transition-colors"
         >
-          ZACK TIPPETT
+          ZACHARIAH TIPPETT
         </button>
 
         {/* Desktop Navigation - Unorthodox style */}
