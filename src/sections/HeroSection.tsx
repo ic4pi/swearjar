@@ -7,48 +7,42 @@ import { getNextThreeShows } from '@/utils/showUtils';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Pulls the video ID out of a "/embed/<id>" YouTube URL for building a
+// player URL with our own autoplay/loop/mute params.
+function getYouTubeEmbedId(embedUrl: string): string | null {
+  const match = embedUrl.match(/\/embed\/([^/?]+)/);
+  return match ? match[1] : null;
+}
+
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const videoGalleryRef = useRef<HTMLDivElement>(null);
   const blurbRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [activeVideo, setActiveVideo] = useState(0);
   const { videos } = useVideos();
   const { shows } = useShows();
   const nextTwoShows = getNextThreeShows(shows).slice(0, 2);
 
-  // Use API videos or fallback to static clips if no videos available
-  const videoClips = videos.length > 0 ? videos.map(v => ({
-    id: v.id,
-    title: v.title,
-    thumbnail: v.thumbnail,
-    videoUrl: v.embedUrl || v.url || '/video_reel.jpg',
-  })) : [
-    {
-      id: '1',
-      title: 'Club Performance',
-      thumbnail: '/video_reel.jpg',
-      videoUrl: '/video_reel.jpg',
-    },
-    {
-      id: '2',
-      title: 'Virtual Show',
-      thumbnail: '/closing_01.jpg',
-      videoUrl: '/closing_01.jpg',
-    },
-    {
-      id: '3',
-      title: 'Backstage Moments',
-      thumbnail: '/closing_02.jpg',
-      videoUrl: '/closing_02.jpg',
-    },
-    {
-      id: '4',
-      title: 'Crowd Reactions',
-      thumbnail: '/closing_03.jpg',
-      videoUrl: '/closing_03.jpg',
-    },
-  ];
+  const heroVideo = videos[0];
+  const heroVideoId = heroVideo?.embedUrl ? getYouTubeEmbedId(heroVideo.embedUrl) : null;
+  const heroEmbedSrc = heroVideoId
+    ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&loop=1&playlist=${heroVideoId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`
+    : null;
+
+  const postPlayerCommand = (func: 'mute' | 'unMute') => {
+    iframeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: [] }),
+      '*'
+    );
+  };
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      postPlayerCommand(prev ? 'mute' : 'unMute');
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -105,14 +99,6 @@ export function HeroSection() {
     return () => ctx.revert();
   }, []);
 
-  // Auto-rotate videos
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveVideo((prev) => (prev + 1) % videoClips.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   const scrollToAbout = () => {
     const aboutSection = document.getElementById('about');
     if (aboutSection) {
@@ -135,53 +121,34 @@ export function HeroSection() {
           ref={videoGalleryRef}
           className="relative w-full max-w-5xl mb-4"
         >
-          {/* Video Container: crop top 4% and bottom 4% so container hugs speaker */}
           <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 bg-black">
-            {/* Inner crop wrapper - shows middle 92% of content */}
-            <div className="absolute inset-0 overflow-hidden">
-              <div
-                className="absolute left-0 right-0 w-full transition-opacity duration-1000"
-                style={{ height: '108.7%', top: '-4.35%' }}
-              >
-                {videoClips.map((clip, index) => (
-                  <div
-                    key={clip.id}
-                    className={`absolute inset-0 transition-opacity duration-1000 ${
-                      index === activeVideo ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <img
-                      src={clip.thumbnail}
-                      alt={clip.title}
-                      className="w-full h-full object-cover"
-                    />
-                {/* Video overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  </div>
-                ))}
-              </div>
-            </div>
+            {heroEmbedSrc ? (
+              <iframe
+                ref={iframeRef}
+                key={heroVideoId}
+                src={heroEmbedSrc}
+                title={heroVideo?.title || 'Stand-up clip'}
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                allow="autoplay; encrypted-media"
+                frameBorder="0"
+              />
+            ) : (
+              <img
+                src={heroVideo?.thumbnail || '/video_reel.jpg'}
+                alt={heroVideo?.title || 'Stand-up clip'}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            {/* Gradient overlay so the bottom text stays readable */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
             {/* Sound Toggle Button */}
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
+              onClick={toggleSound}
               className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
             >
               {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
-
-            {/* Video Indicators */}
-            <div className="absolute top-4 left-4 z-20 flex gap-2">
-              {videoClips.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveVideo(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === activeVideo ? 'bg-primary w-6' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
 
             {/* Bottom Overlay - Intro Blurb */}
             <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8 z-20">
@@ -219,7 +186,7 @@ export function HeroSection() {
             {!soundEnabled && (
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
                 <button
-                  onClick={() => setSoundEnabled(true)}
+                  onClick={toggleSound}
                   className="flex flex-col items-center gap-3 bg-black/70 hover:bg-black/90 px-6 py-4 rounded-xl transition-colors"
                 >
                   <Volume2 className="w-8 h-8 text-primary" />

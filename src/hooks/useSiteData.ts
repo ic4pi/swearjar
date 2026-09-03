@@ -29,10 +29,10 @@ const fallbackShows: Show[] = [
 const fallbackVideos: Video[] = [
   {
     id: '1',
-    title: 'My Tourette\'s Story - Stand Up Set',
-    thumbnail: '/video_reel.jpg',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    title: 'Stand-Up Clip',
+    thumbnail: 'https://img.youtube.com/vi/NYb64OG_ksg/maxresdefault.jpg',
+    url: 'https://youtu.be/NYb64OG_ksg',
+    embedUrl: 'https://www.youtube.com/embed/NYb64OG_ksg'
   }
 ];
 
