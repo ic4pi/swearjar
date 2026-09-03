@@ -52,9 +52,13 @@ export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProp
         throw new Error('Failed to load Stripe');
       }
 
-      // Confirm payment
+      // Confirm payment. `redirect: 'if_required'` keeps the shopper on this
+      // page for cards (no redirect needed) instead of always navigating to
+      // return_url - which isn't even a route this site defines - and
+      // silently skipping the onSuccess/onError callbacks below.
       const { error, paymentIntent } = await stripe.confirmPayment({
         clientSecret,
+        redirect: 'if_required',
         confirmParams: {
           return_url: `${window.location.origin}/success`,
           payment_method_data: {

@@ -15,16 +15,17 @@ export interface Product {
 export interface Show {
   id: string;
   date: string;
-  startTime: string;
+  startTime?: string;
   venue: string;
   location: string;
+  link?: string;
 }
 
 export interface Video {
   id: string;
   title: string;
   thumbnail: string;
-  url: string;
+  url?: string;
   embedUrl?: string;
 }
 
