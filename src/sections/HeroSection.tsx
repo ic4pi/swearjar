@@ -20,14 +20,13 @@ export function HeroSection() {
   const blurbRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const { videos } = useVideos();
   const { shows } = useShows();
   const nextTwoShows = getNextThreeShows(shows).slice(0, 2);
 
-  // Clamp in case the list shrank (a video was removed) since the index was set.
-  const safeIndex = videos.length > 0 ? Math.min(activeVideoIndex, videos.length - 1) : 0;
-  const heroVideo = videos[safeIndex];
+  // Hero always autoplays the first video; the full playlist lives further
+  // down the page in the "Watch the Set" section.
+  const heroVideo = videos[0];
   const heroVideoId = heroVideo?.embedUrl ? getYouTubeEmbedId(heroVideo.embedUrl) : null;
   const heroEmbedSrc = heroVideoId
     ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&loop=1&playlist=${heroVideoId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`
@@ -207,30 +206,6 @@ export function HeroSection() {
               </div>
             )}
           </div>
-
-          {/* Playlist - only shown once there's more than one video to pick from */}
-          {videos.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto mt-4 pb-1">
-              {videos.map((video, index) => (
-                <button
-                  key={video.id}
-                  onClick={() => setActiveVideoIndex(index)}
-                  className={`shrink-0 w-32 sm:w-36 text-left rounded-lg overflow-hidden border-2 transition-colors ${
-                    index === safeIndex ? 'border-primary' : 'border-transparent hover:border-border'
-                  }`}
-                >
-                  <div className="aspect-video bg-muted">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <p className="text-xs font-semibold mt-1 truncate">{video.title}</p>
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* Upcoming shows - 2 widgets, responsive positioning */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 max-w-2xl mx-auto">

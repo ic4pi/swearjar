@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '@/components/ui/button';
 import { Play, X, Youtube } from 'lucide-react';
-import { videos } from '@/data/siteData';
+import { useVideos } from '@/hooks/useSiteData';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,6 +12,14 @@ export function VideoSection() {
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const { videos } = useVideos();
+  const safeIndex = videos.length > 0 ? Math.min(activeIndex, videos.length - 1) : 0;
+
+  const selectVideo = (index: number) => {
+    setActiveIndex(index);
+    setIsPlaying(false);
+  };
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -66,7 +74,7 @@ export function VideoSection() {
     return () => ctx.revert();
   }, []);
 
-  const featuredVideo = videos[0];
+  const featuredVideo = videos[safeIndex];
 
   return (
     <section
@@ -99,7 +107,11 @@ export function VideoSection() {
           ref={videoContainerRef}
           className="relative w-full max-w-4xl aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10"
         >
-          {!isPlaying ? (
+          {!featuredVideo ? (
+            <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground text-sm">
+              No videos added yet.
+            </div>
+          ) : !isPlaying ? (
             <>
               {/* Thumbnail */}
               <img
@@ -107,7 +119,7 @@ export function VideoSection() {
                 alt={featuredVideo.title}
                 className="w-full h-full object-cover"
               />
-              
+
               {/* Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col items-center justify-between p-8">
                 <div className="flex flex-col items-center justify-center flex-1">
@@ -124,7 +136,7 @@ export function VideoSection() {
                     {featuredVideo.title}
                   </p>
                 </div>
-                
+
                 {/* Bottom text overlay */}
                 <div className="w-full text-center">
                   <p className="text-white text-lg lg:text-xl font-bold leading-relaxed drop-shadow-lg">
@@ -153,6 +165,30 @@ export function VideoSection() {
             </div>
           )}
         </div>
+
+        {/* Playlist - only shown once there's more than one video to pick from */}
+        {videos.length > 1 && (
+          <div className="flex gap-3 overflow-x-auto mt-6 max-w-4xl w-full pb-1">
+            {videos.map((video, index) => (
+              <button
+                key={video.id}
+                onClick={() => selectVideo(index)}
+                className={`shrink-0 w-32 sm:w-36 text-left rounded-lg overflow-hidden border-2 transition-colors ${
+                  index === safeIndex ? 'border-primary' : 'border-transparent hover:border-border'
+                }`}
+              >
+                <div className="aspect-video bg-muted">
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-xs font-semibold mt-1 truncate">{video.title}</p>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* CTA */}
         <div className="mt-8 lg:mt-12">

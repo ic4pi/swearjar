@@ -631,7 +631,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 <li>• <strong>YouTube Embed:</strong> Get embed code from YouTube → Share → Embed</li>
                 <li>• <strong>Embed URL Example:</strong> https://www.youtube.com/embed/dQw4w9WgXcQ</li>
                 <li>• <strong>Thumbnail:</strong> Add image URL or use YouTube thumbnail</li>
-                <li>• <strong>Hero Section:</strong> First video plays automatically. Add more to show a clickable playlist strip beneath it.</li>
+                <li>• <strong>Hero Section:</strong> First video plays automatically at the top of the page.</li>
+                <li>• <strong>Watch the Set:</strong> All videos appear there as a clickable playlist further down the page.</li>
               </ul>
             </div>
             

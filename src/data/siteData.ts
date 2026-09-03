@@ -1,4 +1,4 @@
-import type { Product, Show, Video } from '@/types';
+import type { Product, Show } from '@/types';
 
 // Activism series - Tourette's awareness designs
 export const products: Product[] = [
@@ -174,16 +174,6 @@ export const shows: Show[] = [
     venue: 'Comedy Club',
     location: 'Houston, TX',
     link: '#'
-  }
-];
-
-export const videos: Video[] = [
-  {
-    id: '1',
-    title: 'My Tourette\'s Story - Stand Up Set',
-    thumbnail: '/video_reel.jpg',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
   }
 ];
 
