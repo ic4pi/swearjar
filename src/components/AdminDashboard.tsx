@@ -631,7 +631,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 <li>• <strong>YouTube Embed:</strong> Get embed code from YouTube → Share → Embed</li>
                 <li>• <strong>Embed URL Example:</strong> https://www.youtube.com/embed/dQw4w9WgXcQ</li>
                 <li>• <strong>Thumbnail:</strong> Add image URL or use YouTube thumbnail</li>
-                <li>• <strong>Hero Section:</strong> Videos appear in main page carousel</li>
+                <li>• <strong>Hero Section:</strong> Only the first video in this list plays in the hero. Additional videos are saved but not shown anywhere yet.</li>
               </ul>
             </div>
             
