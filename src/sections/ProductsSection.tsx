@@ -3,13 +3,16 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useProducts } from '@/hooks/useSiteData';
 import { StripeCheckout } from '@/components/StripeCheckoutNew';
-import type { Product } from '@/types';
+import { ShippingDialog } from '@/components/ShippingDialog';
+import type { Product, ShippingInfo } from '@/types';
 
 gsap.registerPlugin(ScrollTrigger);
 
 function ProductCard({ product }: { product: Product }) {
   const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
   const [quantity, setQuantity] = useState(1);
+  const [shippingOpen, setShippingOpen] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo | null>(null);
 
   return (
     <div className="product-card group">
@@ -69,18 +72,38 @@ function ProductCard({ product }: { product: Product }) {
             <span className="font-black text-xl text-primary">${product.price * quantity}</span>
           </div>
           
-          {/* Checkout happens on-site via Stripe; fulfillment is handled
-              in the background, so there's no external "order" link. */}
-          <StripeCheckout
-            items={[{
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              quantity,
-              variant: selectedVariant
-            }]}
-            onSuccess={() => alert('Payment successful!')}
-            onError={(error) => alert(`Payment failed: ${error}`)}
+          {/* Checkout happens on-site via Stripe; fulfillment is pushed to
+              Merchize automatically once payment succeeds. Shipping details
+              are collected first since Merchize needs a real address. */}
+          {shippingInfo ? (
+            <StripeCheckout
+              items={[{
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity,
+                variant: selectedVariant
+              }]}
+              shippingInfo={shippingInfo}
+              onSuccess={() => alert('Payment successful!')}
+              onError={(error) => alert(`Payment failed: ${error}`)}
+            />
+          ) : (
+            <button
+              onClick={() => setShippingOpen(true)}
+              className="w-full bg-primary text-primary-foreground px-4 py-2 font-semibold text-sm rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              Buy Now
+            </button>
+          )}
+
+          <ShippingDialog
+            open={shippingOpen}
+            onOpenChange={setShippingOpen}
+            onSubmit={(info) => {
+              setShippingInfo(info);
+              setShippingOpen(false);
+            }}
           />
         </div>
       </div>

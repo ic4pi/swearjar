@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { CreditCard } from 'lucide-react';
 import { API_BASE } from '@/lib/api-config';
+import type { ShippingInfo } from '@/types';
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_...');
@@ -14,11 +15,12 @@ interface StripeCheckoutProps {
     quantity: number;
     variant: string;
   }>;
+  shippingInfo: ShippingInfo;
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
 
-export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProps) {
+export function StripeCheckout({ items, shippingInfo, onSuccess, onError }: StripeCheckoutProps) {
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
@@ -28,7 +30,7 @@ export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProp
     }
 
     setLoading(true);
-    
+
     try {
       // Create payment intent on backend
       const response = await fetch(`${API_BASE}/create-payment-intent`, {
@@ -36,7 +38,7 @@ export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProp
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, shippingInfo }),
       });
 
       if (!response.ok) {
@@ -63,7 +65,20 @@ export function StripeCheckout({ items, onSuccess, onError }: StripeCheckoutProp
           return_url: `${window.location.origin}/success`,
           payment_method_data: {
             billing_details: {
-              email: 'customer@example.com', // You can collect this from a form
+              email: shippingInfo.email,
+              phone: shippingInfo.phone,
+            },
+          },
+          shipping: {
+            name: shippingInfo.full_name,
+            phone: shippingInfo.phone,
+            address: {
+              line1: shippingInfo.address_1,
+              line2: shippingInfo.address_2 || undefined,
+              city: shippingInfo.city,
+              state: shippingInfo.state,
+              postal_code: shippingInfo.postcode,
+              country: shippingInfo.country,
             },
           },
         },

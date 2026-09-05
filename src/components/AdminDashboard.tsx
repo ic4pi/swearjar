@@ -307,7 +307,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       image: '/product_sweater_1.jpg',
       category: 'apparel',
       series: 'funny',
-      variants: ['Unisex Hoodie']
+      variants: ['Unisex Hoodie'],
+      merchize_sku: ''
     };
 
     try {
@@ -701,7 +702,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
             
             <div className="space-y-3">
               {products.map((product) => (
-                <div key={product.id} className="grid grid-cols-6 gap-3 p-3 bg-background border border-border rounded-lg">
+                <div key={product.id} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-3 bg-background border border-border rounded-lg">
                   <Input
                     value={product.name}
                     onChange={(e) => handleUpdateProduct(product.id, 'name', e.target.value)}
@@ -722,6 +723,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     value={product.category}
                     onChange={(e) => handleUpdateProduct(product.id, 'category', e.target.value)}
                     placeholder="Category"
+                  />
+                  <Input
+                    value={product.merchize_sku || ''}
+                    onChange={(e) => handleUpdateProduct(product.id, 'merchize_sku', e.target.value)}
+                    placeholder="Merchize SKU"
                   />
                   <select
                     value={product.series || ''}

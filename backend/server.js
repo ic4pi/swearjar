@@ -10,6 +10,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY environment variable is required');
 }
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const merchize = require('./merchize');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -82,6 +83,70 @@ db.serialize(() => {
   // printful_url named and exposed the old fulfillment supplier - dropped from
   // existing databases too so no stored value can leak via GET /api/products.
   db.run(`ALTER TABLE products DROP COLUMN printful_url`, () => {});
+  // Merchize SKU for the product, used to build items[].sku when an order is
+  // pushed to Merchize for fulfillment. Since Merchize assigns a distinct SKU
+  // per size, this holds a JSON map of variant label -> Merchize SKU (e.g.
+  // {"S":"MWHDVN000000AA01","M":"MWHDVN000000AA02"}). A plain string instead
+  // of JSON is treated as a single SKU shared by every variant.
+  db.run(`ALTER TABLE products ADD COLUMN merchize_sku TEXT`, () => {});
+
+  // Orders table - tracks fulfillment orders pushed to Merchize and the
+  // tracking/status updates Merchize sends back over webhook.
+  db.run(`CREATE TABLE IF NOT EXISTS orders (
+    id TEXT PRIMARY KEY,
+    merchize_order_code TEXT,
+    status TEXT DEFAULT 'pending',
+    tracking_company TEXT,
+    tracking_number TEXT,
+    tracking_url TEXT,
+    customer_email TEXT,
+    shipping_info TEXT,
+    items TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  // Seed the two Merchize-catalog designs the site launches with. Uses
+  // INSERT OR IGNORE keyed on a fixed id, so this only ever inserts once -
+  // safe to leave in place across every future deploy/restart, and won't
+  // clobber edits made afterward from the admin dashboard.
+  const merchizeSeedProducts = [
+    {
+      id: 'white-collar-crime-hoodie',
+      name: 'I Heart White Collar Crime (Midweight)',
+      description: 'Midweight hoodie featuring the "I Heart White Collar Crime" design.',
+      price: 47,
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/9kcjr3ho/variants/6a9b69fdbdd18a8571cf6341/variant-sku/MWHDVN000000AA01/attributes-size:s,background:qdrvtf9_mockup-backgrounds_aa8048d3-ea20-4b8c-aa92-7b01f16a7d48/front-name:Front-fLVy4ClOB/thumb.jpg',
+      category: 'apparel',
+      series: 'funny',
+      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+      merchize_sku: {
+        S: 'MWHDVN000000AA01', M: 'MWHDVN000000AA02', L: 'MWHDVN000000AA03', XL: 'MWHDVN000000AA04',
+        '2XL': 'MWHDVN000000AA05', '3XL': 'MWHDVN000000AA06', '4XL': 'MWHDVN000000AA07', '5XL': 'MWHDVN000000AA08',
+      },
+    },
+    {
+      id: 'white-collar-crime-zip-hoodie',
+      name: 'I Heart White Collar Crime Zip-Hoodie (Midweight)',
+      description: 'Midweight zip-up hoodie featuring the "I Heart White Collar Crime" design.',
+      price: 48,
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/9kcjr3ho/variants/6a9b739c221aaf8be9c09219/variant-sku/MWZHVN000000AA01/attributes-size:s,background:qdrvtf9_mockup-backgrounds_a1473146-abc2-41d5-8828-2588b6c158b2/front-name:Front-zyF50cnqx/thumb.jpg',
+      category: 'apparel',
+      series: 'funny',
+      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+      merchize_sku: {
+        S: 'MWZHVN000000AA01', M: 'MWZHVN000000AA02', L: 'MWZHVN000000AA03', XL: 'MWZHVN000000AA04',
+        '2XL': 'MWZHVN000000AA05', '3XL': 'MWZHVN000000AA06', '4XL': 'MWZHVN000000AA07', '5XL': 'MWZHVN000000AA08',
+      },
+    },
+  ];
+  for (const p of merchizeSeedProducts) {
+    db.run(
+      `INSERT OR IGNORE INTO products (id, name, description, price, image, category, series, variants, merchize_sku)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [p.id, p.name, p.description, p.price, p.image, p.category, p.series, JSON.stringify(p.variants), JSON.stringify(p.merchize_sku)]
+    );
+  }
 
   // Donations table
   db.run(`CREATE TABLE IF NOT EXISTS donations (
@@ -315,11 +380,11 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', verifyToken, (req, res) => {
-  const { id, name, description, price, image, category, series, variants } = req.body;
+  const { id, name, description, price, image, category, series, variants, merchize_sku } = req.body;
 
-  db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, name, description, price, image, category, series || null, JSON.stringify(variants)], function(err) {
+  db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants, merchize_sku)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, name, description, price, image, category, series || null, JSON.stringify(variants), merchize_sku || null], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
@@ -329,11 +394,11 @@ app.post('/api/products', verifyToken, (req, res) => {
 
 app.put('/api/products/:id', verifyToken, (req, res) => {
   const { id } = req.params;
-  const { name, description, price, image, category, series, variants, sales } = req.body;
+  const { name, description, price, image, category, series, variants, sales, merchize_sku } = req.body;
 
   db.run(`UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?,
-          series = ?, variants = ?, sales = ? WHERE id = ?`,
-    [name, description, price, image, category, series || null, JSON.stringify(variants), sales || 0, id], function(err) {
+          series = ?, variants = ?, sales = ?, merchize_sku = ? WHERE id = ?`,
+    [name, description, price, image, category, series || null, JSON.stringify(variants), sales || 0, merchize_sku || null, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
@@ -425,20 +490,30 @@ app.delete('/api/photos/:id', verifyToken, (req, res) => {
 
 function getProductById(id) {
   return new Promise((resolve, reject) => {
-    db.get('SELECT id, name, price FROM products WHERE id = ?', [id], (err, row) => {
+    db.get('SELECT id, name, price, image, merchize_sku FROM products WHERE id = ?', [id], (err, row) => {
       if (err) reject(err);
       else resolve(row);
     });
   });
 }
 
+const REQUIRED_SHIPPING_FIELDS = ['full_name', 'address_1', 'city', 'state', 'postcode', 'country', 'email', 'phone'];
+
 // Create payment intent
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
-    const { items } = req.body;
+    const { items, shippingInfo } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'No items provided' });
+    }
+
+    if (!shippingInfo || typeof shippingInfo !== 'object') {
+      return res.status(400).json({ error: 'Shipping info is required' });
+    }
+    const missingField = REQUIRED_SHIPPING_FIELDS.find((field) => !shippingInfo[field]);
+    if (missingField) {
+      return res.status(400).json({ error: `Missing shipping field: ${missingField}` });
     }
 
     // Price and existence are looked up server-side so a client can't submit
@@ -454,10 +529,12 @@ app.post('/api/create-payment-intent', async (req, res) => {
 
       const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
       amount += Math.round(product.price * quantity * 100);
-      verifiedItems.push({ id: product.id, name: product.name, quantity });
+      verifiedItems.push({ id: product.id, name: product.name, quantity, variant: item.variant || '' });
     }
 
-    // Create payment intent with metadata
+    // Create payment intent with metadata. Shipping fields are stored as
+    // individual keys (rather than one JSON blob) to stay well under
+    // Stripe's 500-character-per-value metadata limit.
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'usd',
@@ -466,7 +543,15 @@ app.post('/api/create-payment-intent', async (req, res) => {
       },
       metadata: {
         items: JSON.stringify(verifiedItems),
-        customer_email: req.body.customerEmail || ''
+        customer_email: shippingInfo.email,
+        shipping_full_name: shippingInfo.full_name,
+        shipping_address_1: shippingInfo.address_1,
+        shipping_address_2: shippingInfo.address_2 || '',
+        shipping_city: shippingInfo.city,
+        shipping_state: shippingInfo.state,
+        shipping_postcode: shippingInfo.postcode,
+        shipping_country: shippingInfo.country,
+        shipping_phone: shippingInfo.phone,
       }
     });
 
@@ -477,20 +562,121 @@ app.post('/api/create-payment-intent', async (req, res) => {
   }
 });
 
+// Resolves a product's stored image (often a relative path served by the
+// site itself) to an absolute URL, since Merchize's order API requires a
+// fetchable image URL for each item.
+function resolveImageUrl(image) {
+  if (!image) return image;
+  if (/^https?:\/\//.test(image)) return image;
+  const siteOrigin = (process.env.SITE_ORIGIN || '').replace(/\/$/, '');
+  return `${siteOrigin}${image.startsWith('/') ? '' : '/'}${image}`;
+}
+
+// product.merchize_sku is stored as JSON mapping variant label -> Merchize
+// SKU (e.g. {"S":"MWHDVN000000AA01"}) for products with per-size SKUs. A
+// plain (non-JSON) string is treated as one SKU shared by every variant.
+function resolveMerchizeSku(product, variant) {
+  if (!product.merchize_sku) return undefined;
+  try {
+    const map = JSON.parse(product.merchize_sku);
+    if (map && typeof map === 'object') {
+      return map[variant] || undefined;
+    }
+  } catch {
+    // Not JSON - fall through to using it as a single flat SKU.
+  }
+  return product.merchize_sku;
+}
+
+async function buildMerchizeItems(items) {
+  const merchizeItems = [];
+  for (const item of items) {
+    const product = await getProductById(item.id);
+    if (!product) continue;
+    const sku = resolveMerchizeSku(product, item.variant);
+    merchizeItems.push({
+      name: product.name,
+      sku,
+      merchize_sku: sku,
+      quantity: item.quantity,
+      price: product.price,
+      currency: 'USD',
+      image: resolveImageUrl(product.image),
+      attributes: [{ name: 'Variant', option: item.variant || 'Default' }],
+    });
+  }
+  return merchizeItems;
+}
+
+// Pushes a paid order to Merchize for fulfillment and records the result.
+// Failures here are logged but don't affect the sale already recorded above -
+// a Merchize outage shouldn't make a successful Stripe payment look failed.
+async function fulfillWithMerchize(paymentIntent, items, customerEmail) {
+  if (!merchize.isConfigured()) {
+    console.warn('Merchize not configured (MERCHIZE_BASE_URL/MERCHIZE_ACCESS_TOKEN) - skipping fulfillment push');
+    return;
+  }
+
+  const shippingInfo = {
+    full_name: paymentIntent.metadata.shipping_full_name,
+    address_1: paymentIntent.metadata.shipping_address_1,
+    address_2: paymentIntent.metadata.shipping_address_2 || '',
+    city: paymentIntent.metadata.shipping_city,
+    state: paymentIntent.metadata.shipping_state,
+    postcode: paymentIntent.metadata.shipping_postcode,
+    country: paymentIntent.metadata.shipping_country,
+    email: customerEmail,
+    phone: paymentIntent.metadata.shipping_phone,
+  };
+
+  if (!shippingInfo.address_1) {
+    console.warn('Skipping Merchize push - no shipping info on payment intent', paymentIntent.id);
+    return;
+  }
+
+  try {
+    const merchizeItems = await buildMerchizeItems(items);
+    const result = await merchize.importOrder({
+      order_id: paymentIntent.id,
+      shipping_info: shippingInfo,
+      items: merchizeItems,
+    });
+
+    db.run(
+      `INSERT INTO orders (id, merchize_order_code, status, customer_email, shipping_info, items)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        paymentIntent.id,
+        result?.data?._id || null,
+        result?.data?.status || 'pending',
+        customerEmail,
+        JSON.stringify(shippingInfo),
+        JSON.stringify(merchizeItems),
+      ],
+      (err) => {
+        if (err) console.error('Failed to record order:', err);
+        else console.log('Order pushed to Merchize:', paymentIntent.id);
+      }
+    );
+  } catch (error) {
+    console.error('Merchize order push failed for', paymentIntent.id, error.response?.data || error.message);
+  }
+}
+
 // Stripe webhook handler for automatic sales updates
-app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), (req, res) => {
+app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
+
   let event;
-  
+
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.log('Webhook signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-  
+
   // Handle the payment_intent.succeeded event
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object;
@@ -537,14 +723,79 @@ app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), (req, r
           }
         }
       );
-      
+
+      await fulfillWithMerchize(paymentIntent, items, customerEmail);
+
     } catch (error) {
       console.error('Error processing webhook:', error);
     }
   }
-  
+
   // Return a 200 response to acknowledge receipt of the event
   res.json({received: true});
+});
+
+// Merchize webhook handler - order status/tracking updates.
+// https://seller.merchize.com/a/api-documents -> Webhooks
+app.post('/api/merchize/webhook', (req, res) => {
+  const key = req.headers['merchize-webhook-key'];
+  if (!process.env.MERCHIZE_WEBHOOK_SECRET || key !== process.env.MERCHIZE_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'Invalid webhook key' });
+  }
+
+  const { event_type, resource } = req.body || {};
+  const orderId = resource?.external_number;
+
+  if (!orderId) {
+    return res.status(200).json({ received: true });
+  }
+
+  db.run(
+    `UPDATE orders SET
+       merchize_order_code = COALESCE(?, merchize_order_code),
+       status = COALESCE(?, status),
+       tracking_company = COALESCE(?, tracking_company),
+       tracking_number = COALESCE(?, tracking_number),
+       tracking_url = COALESCE(?, tracking_url),
+       updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [
+      resource.order_code || null,
+      resource.status || null,
+      resource.tracking_company || null,
+      resource.tracking_number || null,
+      resource.tracking_url || null,
+      orderId,
+    ],
+    function(err) {
+      if (err) console.error('Failed to apply Merchize webhook:', err);
+      else console.log(`Merchize webhook ${event_type} applied to order ${orderId} (${this.changes} row(s))`);
+    }
+  );
+
+  res.status(200).json({ received: true });
+});
+
+// Orders endpoints
+app.get('/api/orders', verifyToken, (req, res) => {
+  db.all('SELECT * FROM orders ORDER BY created_at DESC', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
+});
+
+app.get('/api/orders/:id', (req, res) => {
+  db.get('SELECT * FROM orders WHERE id = ?', [req.params.id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!row) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(row);
+  });
 });
 
 // Get payment status
