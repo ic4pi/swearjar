@@ -10,8 +10,7 @@ export const products: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
     id: '2',
@@ -21,8 +20,7 @@ export const products: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie']
   },
   {
     id: '3',
@@ -32,8 +30,7 @@ export const products: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
     id: '4',
@@ -43,8 +40,7 @@ export const products: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie']
   },
   {
     id: '9',
@@ -68,8 +64,7 @@ export const funnyProducts: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
     id: '6',
@@ -79,8 +74,7 @@ export const funnyProducts: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie']
   },
   {
     id: '7',
@@ -90,8 +84,7 @@ export const funnyProducts: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
     id: '8',
@@ -101,9 +94,7 @@ export const funnyProducts: Product[] = [
     image: '/product_sweater_1.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie'],
-    printfulUrl: 'https://www.printful.com/'
-  }
+    variants: ['Unisex Hoodie']  }
 ];
 
 export const accessoryProducts: Product[] = [
@@ -114,8 +105,7 @@ export const accessoryProducts: Product[] = [
     price: 8,
     image: '/product_sticker_1.jpg',
     category: 'accessories',
-    variants: ['Standard Pack'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Standard Pack']
   },
   {
     id: 'a2',
@@ -124,8 +114,7 @@ export const accessoryProducts: Product[] = [
     price: 16,
     image: '/shop_mug.jpg',
     category: 'accessories',
-    variants: ['11oz Mug'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['11oz Mug']
   },
   {
     id: 'a3',
@@ -134,8 +123,7 @@ export const accessoryProducts: Product[] = [
     price: 12,
     image: '/product_pin_1.jpg',
     category: 'accessories',
-    variants: ['Set of 3'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Set of 3']
   },
   {
     id: 'a4',
@@ -144,9 +132,7 @@ export const accessoryProducts: Product[] = [
     price: 22,
     image: '/product_tote_1.jpg',
     category: 'accessories',
-    variants: ['Standard Tote'],
-    printfulUrl: 'https://www.printful.com/'
-  }
+    variants: ['Standard Tote']  }
 ];
 
 export const shows: Show[] = [

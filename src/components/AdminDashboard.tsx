@@ -307,8 +307,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       image: '/product_sweater_1.jpg',
       category: 'apparel',
       series: 'funny',
-      variants: ['Unisex Hoodie'],
-      printfulUrl: 'https://www.printful.com/'
+      variants: ['Unisex Hoodie']
     };
 
     try {
@@ -686,15 +685,14 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 <li>• <strong>Add Product:</strong> Click "Add Product" button</li>
                 <li>• <strong>Name:</strong> Enter product name (e.g., "Zachariah Tippett Logo Hoodie")</li>
                 <li>• <strong>Price:</strong> Enter price in dollars (e.g., 25.00)</li>
-                <li>• <strong>Image URL:</strong> Use product photo URL from Printful or elsewhere</li>
-                <li>• <strong>Printful URL:</strong> Get from your Printful dashboard → Store</li>
+                <li>• <strong>Image URL:</strong> Use a product photo URL</li>
                 <li>• <strong>Category:</strong> Enter "apparel", "accessories", etc.</li>
                 <li>• <strong>Sales:</strong> Updates automatically from Stripe payments</li>
               </ul>
             </div>
-            
+
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg">Printful Products</h3>
+              <h3 className="font-bold text-lg">Products</h3>
               <Button onClick={handleAddProduct} size="sm" className="btn-primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
@@ -703,7 +701,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
             
             <div className="space-y-3">
               {products.map((product) => (
-                <div key={product.id} className="grid grid-cols-7 gap-3 p-3 bg-background border border-border rounded-lg">
+                <div key={product.id} className="grid grid-cols-6 gap-3 p-3 bg-background border border-border rounded-lg">
                   <Input
                     value={product.name}
                     onChange={(e) => handleUpdateProduct(product.id, 'name', e.target.value)}
@@ -719,11 +717,6 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     value={product.image}
                     onChange={(e) => handleUpdateProduct(product.id, 'image', e.target.value)}
                     placeholder="Image URL"
-                  />
-                  <Input
-                    value={product.printfulUrl || ''}
-                    onChange={(e) => handleUpdateProduct(product.id, 'printfulUrl', e.target.value)}
-                    placeholder="Printful URL"
                   />
                   <Input
                     value={product.category}
@@ -755,7 +748,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                   <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No products added yet.</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Add products with Printful links to display on the shop page.
+                    Add products to display them on the shop page.
                   </p>
                 </div>
               )}

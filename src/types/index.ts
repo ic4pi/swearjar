@@ -8,7 +8,6 @@ export interface Product {
   /** For apparel: which shop section it belongs to. Not used for accessories. */
   series?: 'activism' | 'funny';
   variants: string[];
-  printfulUrl?: string;
   sales?: number;
 }
 

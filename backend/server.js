@@ -313,11 +313,11 @@ app.get('/api/products', (req, res) => {
 });
 
 app.post('/api/products', verifyToken, (req, res) => {
-  const { id, name, description, price, image, category, series, variants, printfulUrl } = req.body;
+  const { id, name, description, price, image, category, series, variants } = req.body;
 
-  db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants, printful_url)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, name, description, price, image, category, series || null, JSON.stringify(variants), printfulUrl], function(err) {
+  db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, name, description, price, image, category, series || null, JSON.stringify(variants)], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
@@ -327,11 +327,11 @@ app.post('/api/products', verifyToken, (req, res) => {
 
 app.put('/api/products/:id', verifyToken, (req, res) => {
   const { id } = req.params;
-  const { name, description, price, image, category, series, variants, printfulUrl, sales } = req.body;
+  const { name, description, price, image, category, series, variants, sales } = req.body;
 
   db.run(`UPDATE products SET name = ?, description = ?, price = ?, image = ?, category = ?,
-          series = ?, variants = ?, printful_url = ?, sales = ? WHERE id = ?`,
-    [name, description, price, image, category, series || null, JSON.stringify(variants), printfulUrl, sales || 0, id], function(err) {
+          series = ?, variants = ?, sales = ? WHERE id = ?`,
+    [name, description, price, image, category, series || null, JSON.stringify(variants), sales || 0, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
