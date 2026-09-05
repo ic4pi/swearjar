@@ -73,13 +73,15 @@ db.serialize(() => {
     category TEXT,
     series TEXT,
     variants TEXT,
-    printful_url TEXT,
     sales INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
   // series ('activism' | 'funny') distinguishes the two apparel shop sections.
   // Added after the initial release, so back it onto existing databases too.
   db.run(`ALTER TABLE products ADD COLUMN series TEXT`, () => {});
+  // printful_url named and exposed the old fulfillment supplier - dropped from
+  // existing databases too so no stored value can leak via GET /api/products.
+  db.run(`ALTER TABLE products DROP COLUMN printful_url`, () => {});
 
   // Donations table
   db.run(`CREATE TABLE IF NOT EXISTS donations (
