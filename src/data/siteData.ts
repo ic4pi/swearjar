@@ -1,89 +1,100 @@
-import type { Product, Show, Video } from '@/types';
+import type { Product, Show } from '@/types';
 
+// Activism series - Tourette's awareness designs
 export const products: Product[] = [
   {
     id: '1',
-    name: 'Tourettes Inc. Logo Tee',
-    description: 'Classic logo tee. Bold design, premium comfort. Wear the message.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  },
-  {
-    id: '2',
     name: 'Tic & Talk Hoodie',
     description: 'Start conversations. Spread awareness. Stay comfortable.',
     price: 45,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '2',
+    name: '1 in 100 Hoodie',
+    description: '1 in 100 school-aged kids have Tourette\'s. Wear the stat, start the conversation.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
   },
   {
     id: '3',
-    name: 'Laugh. Learn. Support. Tee',
-    description: 'Our mantra on a tee. Premium quality, meaningful message.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  },
-  {
-    id: '4',
-    name: 'Tourette\'s Warrior Sweatshirt',
+    name: 'Warrior Hoodie',
     description: 'For the fighters. For the advocates. For everyone.',
     price: 48,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  }
-];
-
-export const funnyProducts: Product[] = [
-  {
-    id: '5',
-    name: 'Comedy & Causes Tee',
-    description: 'Where laughter meets purpose. Quality you can feel.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
-    id: '6',
+    id: '4',
     name: 'Awareness Ambassador Hoodie',
     description: 'Be an ambassador for understanding. Wear it proudly.',
     price: 45,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  },
+  {
+    id: '9',
+    name: "Tourette's Awareness Hoodie",
+    description: "Design by Smart_Ppl. Wear the awareness, start the conversation.",
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  }
+];
+
+// Funny series - no category, just laughs
+export const funnyProducts: Product[] = [
+  {
+    id: '5',
+    name: 'Laugh Out Loud Hoodie',
+    description: 'No cause, no message. Just funny.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '6',
+    name: 'Stage Ready Hoodie',
+    description: 'Comfortable enough for the green room, funny enough for the front row.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie']
   },
   {
     id: '7',
-    name: 'One Laugh at a Time Tee',
-    description: 'Changing perceptions through comedy. One shirt at a time.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
+    name: 'Comedy Club Hoodie',
+    description: 'For anyone who thinks they could probably do five minutes too.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
   },
   {
     id: '8',
-    name: 'Tourettes Inc. Original',
+    name: 'Zachariah Tippett Original Hoodie',
     description: 'The original. The classic. The statement.',
-    price: 30,
-    image: '/product_tshirt_1.jpg',
+    price: 48,
+    image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  }
+    series: 'funny',
+    variants: ['Unisex Hoodie']  }
 ];
 
 export const accessoryProducts: Product[] = [
@@ -94,8 +105,7 @@ export const accessoryProducts: Product[] = [
     price: 8,
     image: '/product_sticker_1.jpg',
     category: 'accessories',
-    variants: ['Standard Pack'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Standard Pack']
   },
   {
     id: 'a2',
@@ -104,8 +114,7 @@ export const accessoryProducts: Product[] = [
     price: 16,
     image: '/shop_mug.jpg',
     category: 'accessories',
-    variants: ['11oz Mug'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['11oz Mug']
   },
   {
     id: 'a3',
@@ -114,8 +123,7 @@ export const accessoryProducts: Product[] = [
     price: 12,
     image: '/product_pin_1.jpg',
     category: 'accessories',
-    variants: ['Set of 3'],
-    printfulUrl: 'https://www.printful.com/'
+    variants: ['Set of 3']
   },
   {
     id: 'a4',
@@ -124,9 +132,7 @@ export const accessoryProducts: Product[] = [
     price: 22,
     image: '/product_tote_1.jpg',
     category: 'accessories',
-    variants: ['Standard Tote'],
-    printfulUrl: 'https://www.printful.com/'
-  }
+    variants: ['Standard Tote']  }
 ];
 
 export const shows: Show[] = [
@@ -164,16 +170,6 @@ export const shows: Show[] = [
     venue: 'Comedy Club',
     location: 'Houston, TX',
     link: '#'
-  }
-];
-
-export const videos: Video[] = [
-  {
-    id: '1',
-    title: 'My Tourette\'s Story - Stand Up Set',
-    thumbnail: '/video_reel.jpg',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
   }
 ];
 

@@ -14,7 +14,7 @@
 
 3. **Configure Web Service**
    - Service Type: Web Service
-   - Name: tourettes-api
+   - Name: zachariah-tippett-api
    - Runtime: Node
    - Build Command: `npm install`
    - Start Command: `npm start`
@@ -133,7 +133,7 @@ export const API_BASE = 'https://your-backend-url.onrender.com/api';
 2. **Test Frontend**
    - Visit your Vercel URL
    - Try admin dashboard: `Ctrl + Tab + Down Arrow`
-   - Login with: `admin` / `tourettes2026`
+   - Login with `admin` and the password printed to the server log on first run (or your `ADMIN_DEFAULT_PASSWORD`)
 
 3. **Test Admin Functions**
    - Add a show

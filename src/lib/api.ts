@@ -1,42 +1,10 @@
 import { API_BASE } from './api-config';
+import type { Show, Video, Product, Donation } from '@/types';
 
-// Types
-export interface Show {
-  id: string;
-  date: string;
-  startTime?: string;
-  venue: string;
-  location: string;
-  link?: string;
-}
-
-export interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  url?: string;
-  embedUrl?: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  variants: string[];
-  printfulUrl?: string;
-  sales?: number;
-}
-
-export interface Donation {
-  id: string;
-  amount: number;
-  donor?: string;
-  message?: string;
-  date: string;
-}
+// Show, Video, Product, and Donation are defined once in @/types and
+// re-exported here so every caller shares the same types instead of two
+// near-identical definitions drifting apart.
+export type { Show, Video, Product, Donation };
 
 export interface Photo {
   id: string;

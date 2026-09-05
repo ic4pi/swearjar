@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Deploying Tourettes Inc Website..."
+echo "🚀 Deploying Zachariah Tippett Website..."
 
 # Colors for output
 GREEN='\033[0;32m'

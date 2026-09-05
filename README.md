@@ -1,4 +1,4 @@
-# Tourettes Inc. Website
+# Zachariah Tippett Website
 
 A cutting-edge, immersive website for Zachariah Tippett - stand-up comedian, activist, and Tourette's Syndrome advocate.
 
@@ -33,7 +33,7 @@ A cutting-edge, immersive website for Zachariah Tippett - stand-up comedian, act
 
 #### Default Credentials
 - **Username**: `admin`
-- **Password**: `tourettes2026`
+- **Password**: generated on first server run and printed once to the server log (or set via `ADMIN_DEFAULT_PASSWORD`)
 
 #### Admin Features
 - **Shows Management**: Add, edit, delete upcoming shows
@@ -78,7 +78,7 @@ Cash App Tag: `$TourettesInc`
 
 ## Contact
 
-Email: tourettesinc@gmail.com
+Email: tourettesinc@gmail.com <!-- TODO: update to Zachariah's new contact email/cashapp when ready -->
 Location: San Antonio, Texas
 
 ---

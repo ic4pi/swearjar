@@ -29,34 +29,142 @@ const fallbackShows: Show[] = [
 const fallbackVideos: Video[] = [
   {
     id: '1',
-    title: 'My Tourette\'s Story - Stand Up Set',
-    thumbnail: '/video_reel.jpg',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    title: 'Stand-Up Clip',
+    thumbnail: 'https://img.youtube.com/vi/NYb64OG_ksg/maxresdefault.jpg',
+    url: 'https://youtu.be/NYb64OG_ksg',
+    embedUrl: 'https://www.youtube.com/embed/NYb64OG_ksg'
   }
 ];
 
 const fallbackProducts: Product[] = [
+  // Activism series - Tourette's awareness designs
   {
     id: '1',
-    name: 'Tourettes Inc. Logo Tee',
-    description: 'Classic logo tee. Bold design, premium comfort. Wear the message.',
-    price: 28,
-    image: '/product_tshirt_1.jpg',
-    category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  },
-  {
-    id: '2',
     name: 'Tic & Talk Hoodie',
     description: 'Start conversations. Spread awareness. Stay comfortable.',
     price: 45,
     image: '/product_sweater_1.jpg',
     category: 'apparel',
-    variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-    printfulUrl: 'https://www.printful.com/'
-  }
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '2',
+    name: '1 in 100 Hoodie',
+    description: '1 in 100 school-aged kids have Tourette\'s. Wear the stat, start the conversation.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  },
+  {
+    id: '3',
+    name: 'Warrior Hoodie',
+    description: 'For the fighters. For the advocates. For everyone.',
+    price: 48,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '4',
+    name: 'Awareness Ambassador Hoodie',
+    description: 'Be an ambassador for understanding. Wear it proudly.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  },
+  {
+    id: '9',
+    name: "Tourette's Awareness Hoodie",
+    description: "Design by Smart_Ppl. Wear the awareness, start the conversation.",
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  },
+  // Funny series - no category, just laughs
+  {
+    id: '5',
+    name: 'Laugh Out Loud Hoodie',
+    description: 'No cause, no message. Just funny.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '6',
+    name: 'Stage Ready Hoodie',
+    description: 'Comfortable enough for the green room, funny enough for the front row.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie']
+  },
+  {
+    id: '7',
+    name: 'Comedy Club Hoodie',
+    description: 'For anyone who thinks they could probably do five minutes too.',
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+  },
+  {
+    id: '8',
+    name: 'Zachariah Tippett Original Hoodie',
+    description: 'The original. The classic. The statement.',
+    price: 48,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'funny',
+    variants: ['Unisex Hoodie']
+  },
+  // Accessories
+  {
+    id: 'a1',
+    name: 'Sticker Pack',
+    description: 'Spread awareness everywhere you go. 5 premium vinyl stickers.',
+    price: 8,
+    image: '/product_sticker_1.jpg',
+    category: 'accessories',
+    variants: ['Standard Pack']
+  },
+  {
+    id: 'a2',
+    name: 'Morning Mug',
+    description: 'Start your day with a smile and a cause. 11oz ceramic.',
+    price: 16,
+    image: '/shop_mug.jpg',
+    category: 'accessories',
+    variants: ['11oz Mug']
+  },
+  {
+    id: 'a3',
+    name: 'Enamel Pin Set',
+    description: 'Wear your support. Collectible quality pins.',
+    price: 12,
+    image: '/product_pin_1.jpg',
+    category: 'accessories',
+    variants: ['Set of 3']
+  },
+  {
+    id: 'a4',
+    name: 'Tote Bag',
+    description: 'Carry the message. Durable canvas, bold design.',
+    price: 22,
+    image: '/product_tote_1.jpg',
+    category: 'accessories',
+    variants: ['Standard Tote']  }
 ];
 
 // Hook for shows

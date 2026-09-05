@@ -22,10 +22,6 @@ interface AdminDashboardProps {
   onClose: () => void;
 }
 
-// Default credentials
-const DEFAULT_USERNAME = 'admin';
-const DEFAULT_PASSWORD = 'tourettes2026';
-
 export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
@@ -305,13 +301,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const handleAddProduct = async () => {
     const newProduct: Product = {
       id: Date.now().toString(),
-      name: 'New Product',
+      name: 'New Hoodie',
       description: 'Product description',
-      price: 25,
-      image: '/product_tshirt_1.jpg',
+      price: 45,
+      image: '/product_sweater_1.jpg',
       category: 'apparel',
-      variants: ['Men\'s T-Shirt', 'Women\'s T-Shirt', 'Unisex Sweater'],
-      printfulUrl: 'https://www.printful.com/'
+      series: 'funny',
+      variants: ['Unisex Hoodie']
     };
 
     try {
@@ -634,7 +630,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 <li>• <strong>YouTube Embed:</strong> Get embed code from YouTube → Share → Embed</li>
                 <li>• <strong>Embed URL Example:</strong> https://www.youtube.com/embed/dQw4w9WgXcQ</li>
                 <li>• <strong>Thumbnail:</strong> Add image URL or use YouTube thumbnail</li>
-                <li>• <strong>Hero Section:</strong> Videos appear in main page carousel</li>
+                <li>• <strong>Hero Section:</strong> First video plays automatically at the top of the page. Up to 3 show as a small playlist there - keep it to 1-2 for the cleanest look.</li>
+                <li>• <strong>Watch the Set:</strong> Every video appears there as a clickable playlist further down the page.</li>
               </ul>
             </div>
             
@@ -686,17 +683,16 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               <h4 className="font-bold text-primary mb-2">Products - Step by Step:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• <strong>Add Product:</strong> Click "Add Product" button</li>
-                <li>• <strong>Name:</strong> Enter product name (e.g., "Tourettes Logo T-Shirt")</li>
+                <li>• <strong>Name:</strong> Enter product name (e.g., "Zachariah Tippett Logo Hoodie")</li>
                 <li>• <strong>Price:</strong> Enter price in dollars (e.g., 25.00)</li>
-                <li>• <strong>Image URL:</strong> Use product photo URL from Printful or elsewhere</li>
-                <li>• <strong>Printful URL:</strong> Get from your Printful dashboard → Store</li>
+                <li>• <strong>Image URL:</strong> Use a product photo URL</li>
                 <li>• <strong>Category:</strong> Enter "apparel", "accessories", etc.</li>
                 <li>• <strong>Sales:</strong> Updates automatically from Stripe payments</li>
               </ul>
             </div>
-            
+
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg">Printful Products</h3>
+              <h3 className="font-bold text-lg">Products</h3>
               <Button onClick={handleAddProduct} size="sm" className="btn-primary">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
@@ -723,15 +719,20 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     placeholder="Image URL"
                   />
                   <Input
-                    value={product.printfulUrl || ''}
-                    onChange={(e) => handleUpdateProduct(product.id, 'printfulUrl', e.target.value)}
-                    placeholder="Printful URL"
-                  />
-                  <Input
                     value={product.category}
                     onChange={(e) => handleUpdateProduct(product.id, 'category', e.target.value)}
                     placeholder="Category"
                   />
+                  <select
+                    value={product.series || ''}
+                    onChange={(e) => handleUpdateProduct(product.id, 'series', e.target.value)}
+                    className="px-2 py-1 border rounded text-sm bg-background"
+                    disabled={product.category !== 'apparel'}
+                  >
+                    <option value="">No series (accessories)</option>
+                    <option value="activism">Activism (Tourette's)</option>
+                    <option value="funny">Funny (no category)</option>
+                  </select>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
@@ -747,7 +748,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                   <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No products added yet.</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Add products with Printful links to display on the shop page.
+                    Add products to display them on the shop page.
                   </p>
                 </div>
               )}

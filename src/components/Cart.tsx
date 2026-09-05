@@ -1,4 +1,4 @@
-import { X, Plus, Minus, ShoppingBag, ExternalLink } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -104,17 +104,8 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem }:
               <span className="font-black text-xl text-primary">${total}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              Shipping calculated at checkout. Fulfilled by Printful.
+              Purchase each item above to check out.
             </p>
-            <a
-              href="https://www.printful.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary w-full inline-flex justify-center"
-            >
-              Checkout on Printful
-              <ExternalLink className="w-4 h-4 ml-2" />
-            </a>
           </div>
         )}
       </SheetContent>
