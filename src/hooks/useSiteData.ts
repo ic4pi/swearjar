@@ -82,6 +82,16 @@ const fallbackProducts: Product[] = [
     variants: ['Unisex Hoodie'],
     printfulUrl: 'https://www.printful.com/'
   },
+  {
+    id: '9',
+    name: "Tourette's Awareness Hoodie",
+    description: "Design by Smart_Ppl. Wear the awareness, start the conversation.",
+    price: 45,
+    image: '/product_sweater_1.jpg',
+    category: 'apparel',
+    series: 'activism',
+    variants: ['Unisex Hoodie']
+  },
   // Funny series - no category, just laughs
   {
     id: '5',

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ShoppingBag, CreditCard } from 'lucide-react';
 import { useProducts } from '@/hooks/useSiteData';
 import { StripeCheckout } from '@/components/StripeCheckoutNew';
 import type { Product } from '@/types';
@@ -70,31 +69,19 @@ function ProductCard({ product }: { product: Product }) {
             <span className="font-black text-xl text-primary">${product.price * quantity}</span>
           </div>
           
-          {/* Payment Options */}
-          <div className="space-y-2">
-            <StripeCheckout 
-              items={[{ 
-                id: product.id, 
-                name: product.name, 
-                price: product.price, 
-                quantity,
-                variant: selectedVariant 
-              }]} 
-              onSuccess={() => alert('Payment successful!')}
-              onError={(error) => alert(`Payment failed: ${error}`)}
-            />
-            
-            {/* Printful Link */}
-            <a
-              href={product.printfulUrl || 'https://www.printful.com/'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full block text-center px-4 py-2 border border-border font-semibold text-sm rounded-lg hover:border-primary transition-colors"
-            >
-              <ShoppingBag className="w-4 h-4 mr-2 inline" />
-              Order via Printful
-            </a>
-          </div>
+          {/* Checkout happens on-site via Stripe; fulfillment is handled
+              in the background, so there's no external "order" link. */}
+          <StripeCheckout
+            items={[{
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              quantity,
+              variant: selectedVariant
+            }]}
+            onSuccess={() => alert('Payment successful!')}
+            onError={(error) => alert(`Payment failed: ${error}`)}
+          />
         </div>
       </div>
     </div>
