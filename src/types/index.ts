@@ -9,6 +9,19 @@ export interface Product {
   series?: 'activism' | 'funny';
   variants: string[];
   sales?: number;
+  merchize_sku?: string;
+}
+
+export interface ShippingInfo {
+  full_name: string;
+  email: string;
+  phone: string;
+  address_1: string;
+  address_2?: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
 }
 
 export interface Show {
