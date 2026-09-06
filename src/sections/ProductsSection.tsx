@@ -186,12 +186,15 @@ export function ProductsSection() {
         <div ref={activismRef}>
           {/* Header */}
           <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-display font-black text-4xl lg:text-6xl tracking-tight mb-4">
+            <h2 className="font-display font-black text-4xl lg:text-6xl tracking-tight mb-2">
               WEAR THE <span className="text-primary">MESSAGE</span>
             </h2>
+            <p className="font-display font-bold text-lg lg:text-2xl tracking-tight text-muted-foreground mb-4">
+              MULTI-PURPOSE APPAREL
+            </p>
             <div className="animate-item h-1 w-64 mx-auto bg-primary rounded-full" />
             <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Hoodie designs raising Tourette&apos;s awareness. Printed on demand with quality that lasts.
+              Designs with something to say. Printed on demand with quality that lasts.
               Select designs also come as a T-shirt.
             </p>
           </div>
