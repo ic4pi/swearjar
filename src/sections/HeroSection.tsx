@@ -11,6 +11,12 @@ gsap.registerPlugin(ScrollTrigger);
 // The full list lives further down the page in "Watch the Set".
 const HERO_MAX_VIDEOS = 3;
 
+// The source clips are square, so a 16:9 frame leaves dead space on each
+// side - which is where YouTube draws its channel avatar/branding. A square
+// video fills 9/16 (56.25%) of the width, leaving (100 - 56.25) / 2 = 21.875%
+// per side; sit just inside that so the bars never clip actual footage.
+const PILLARBOX_BAR_PERCENT = 21.7;
+
 // Pulls the video ID out of a "/embed/<id>" YouTube URL for building a
 // player URL with our own autoplay/loop/mute params.
 function getYouTubeEmbedId(embedUrl: string): string | null {
@@ -139,16 +145,28 @@ export function HeroSection() {
         >
           <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 bg-black">
             {heroEmbedSrc ? (
-              <iframe
-                ref={iframeRef}
-                key={heroVideoId}
-                src={heroEmbedSrc}
-                title={heroVideo?.title || 'Stand-up clip'}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                allow="autoplay; encrypted-media"
-                frameBorder="0"
-                onLoad={handlePlayerLoad}
-              />
+              <>
+                <iframe
+                  ref={iframeRef}
+                  key={heroVideoId}
+                  src={heroEmbedSrc}
+                  title={heroVideo?.title || 'Stand-up clip'}
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  allow="autoplay; encrypted-media"
+                  frameBorder="0"
+                  onLoad={handlePlayerLoad}
+                />
+                {/* Mask the empty sides of the frame so YouTube's channel
+                    avatar can't show through next to a square video. */}
+                <div
+                  className="absolute inset-y-0 left-0 z-10 bg-black pointer-events-none"
+                  style={{ width: `${PILLARBOX_BAR_PERCENT}%` }}
+                />
+                <div
+                  className="absolute inset-y-0 right-0 z-10 bg-black pointer-events-none"
+                  style={{ width: `${PILLARBOX_BAR_PERCENT}%` }}
+                />
+              </>
             ) : (
               <img
                 src={heroVideo?.thumbnail || '/video_reel.jpg'}
@@ -156,61 +174,15 @@ export function HeroSection() {
                 className="absolute inset-0 w-full h-full object-cover"
               />
             )}
-            {/* Gradient overlay so the bottom text stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
             {/* Sound Toggle Button */}
             <button
               onClick={toggleSound}
               className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
+              aria-label={soundEnabled ? 'Mute video' : 'Unmute video'}
             >
               {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
-
-            {/* Bottom Overlay - Intro Blurb */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 lg:p-8 z-20">
-              <div className="max-w-3xl">
-                <p className="text-white text-lg lg:text-xl font-bold leading-relaxed mb-4">
-                  Hello Humans! my name is Zachariah Tippett but, you can call me Tourette&apos;s and I have Tourette&apos;s Syndrome
-                </p>
-                
-                {/* Links Row */}
-                <div className="flex flex-wrap items-center gap-4">
-                  <a
-                    href="https://www.google.com/search?q=Zachariah+Tippett"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Google Me
-                  </a>
-                  
-                  <span className="text-white/40">|</span>
-                  
-                  <button
-                    onClick={scrollToAbout}
-                    className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
-                  >
-                    Read More
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Sound Enable Prompt */}
-            {!soundEnabled && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
-                <button
-                  onClick={toggleSound}
-                  className="flex flex-col items-center gap-3 bg-black/70 hover:bg-black/90 px-6 py-4 rounded-xl transition-colors"
-                >
-                  <Volume2 className="w-8 h-8 text-primary" />
-                  <span className="text-white font-semibold text-sm">Tap to Enable Sound</span>
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Small playlist - hero stays capped at HERO_MAX_VIDEOS; the full
@@ -236,6 +208,36 @@ export function HeroSection() {
               ))}
             </div>
           )}
+
+          {/* Intro blurb - sits below the video so nothing covers the footage */}
+          <div ref={blurbRef} className="max-w-3xl mx-auto mt-6 text-center">
+            <p className="text-foreground text-base sm:text-lg lg:text-xl font-bold leading-relaxed mb-3">
+              Hello Humans! my name is Zachariah Tippett but, you can call me Tourette&apos;s and I have Tourette&apos;s Syndrome
+            </p>
+
+            {/* Links Row */}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <a
+                href="https://www.google.com/search?q=Zachariah+Tippett"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Google Me
+              </a>
+
+              <span className="text-muted-foreground">|</span>
+
+              <button
+                onClick={scrollToAbout}
+                className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
+              >
+                Read More
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
 
           {/* Upcoming shows - 2 widgets, responsive positioning */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 max-w-2xl mx-auto">
