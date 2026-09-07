@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -16,6 +17,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+app.use(helmet());
+
 // Set FRONTEND_URL (comma-separated for multiple) to the deployed frontend origin(s).
 const defaultProdOrigins = ['https://zachariah-tippett.vercel.app'];
 const allowedOrigins = process.env.FRONTEND_URL
@@ -166,6 +169,19 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
+  // Admin audit log - records every admin login and every mutation made
+  // through the admin dashboard, so there's a trail of who changed what.
+  db.run(`CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_username TEXT,
+    action TEXT NOT NULL,
+    entity TEXT,
+    entity_id TEXT,
+    details TEXT,
+    ip TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   // Initialize default admin if not exists. Set ADMIN_DEFAULT_PASSWORD to control it;
   // otherwise a random one is generated and printed once to the server log on first run.
   const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(9).toString('base64url');
@@ -178,38 +194,62 @@ db.serialize(() => {
     });
 });
 
+// Records an admin login or dashboard mutation. Fire-and-forget: a logging
+// failure shouldn't block the admin action that triggered it.
+function logAdminAction(req, action, entity, entityId, details) {
+  db.run(
+    `INSERT INTO admin_audit_log (admin_username, action, entity, entity_id, details, ip)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      req.user?.username || null,
+      action,
+      entity || null,
+      entityId != null ? String(entityId) : null,
+      details ? JSON.stringify(details) : null,
+      req.ip,
+    ],
+    (err) => {
+      if (err) console.error('Failed to write audit log entry:', err);
+    }
+  );
+}
+
 // JWT Secret - required, no insecure fallback
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
 
-// Very small in-memory rate limiter for the login endpoint
-const loginAttempts = new Map(); // ip -> { count, resetAt }
-const LOGIN_WINDOW_MS = 15 * 60 * 1000;
-const LOGIN_MAX_ATTEMPTS = 10;
+// Small in-memory rate limiter, keyed by IP. Used with a tight window for
+// login attempts and a looser one for authenticated admin writes.
+function createRateLimiter(maxAttempts, windowMs) {
+  const attempts = new Map(); // ip -> { count, resetAt }
 
-function rateLimitLogin(req, res, next) {
-  const ip = req.ip;
-  const now = Date.now();
-  const entry = loginAttempts.get(ip);
+  return function rateLimit(req, res, next) {
+    const ip = req.ip;
+    const now = Date.now();
+    const entry = attempts.get(ip);
 
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= LOGIN_MAX_ATTEMPTS) {
-      return res.status(429).json({ error: 'Too many login attempts. Try again later.' });
+    if (entry && now < entry.resetAt) {
+      if (entry.count >= maxAttempts) {
+        return res.status(429).json({ error: 'Too many requests. Try again later.' });
+      }
+      entry.count++;
+    } else {
+      attempts.set(ip, { count: 1, resetAt: now + windowMs });
     }
-    entry.count++;
-  } else {
-    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
-  }
 
-  next();
+    next();
+  };
 }
+
+const rateLimitLogin = createRateLimiter(10, 15 * 60 * 1000);
+const rateLimitAdminWrite = createRateLimiter(120, 15 * 60 * 1000);
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
@@ -234,6 +274,10 @@ app.post('/api/admin/login', rateLimitLogin, async (req, res) => {
       }
 
       if (!row || !bcrypt.compareSync(password, row.password)) {
+        db.run(
+          `INSERT INTO admin_audit_log (admin_username, action, ip) VALUES (?, 'login_failed', ?)`,
+          [username || null, req.ip]
+        );
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
@@ -243,6 +287,10 @@ app.post('/api/admin/login', rateLimitLogin, async (req, res) => {
         { expiresIn: '24h' }
       );
 
+      db.run(
+        `INSERT INTO admin_audit_log (admin_username, action, ip) VALUES (?, 'login_success', ?)`,
+        [row.username, req.ip]
+      );
       res.json({ success: true, token });
     });
   } catch (error) {
@@ -251,7 +299,7 @@ app.post('/api/admin/login', rateLimitLogin, async (req, res) => {
 });
 
 // Update credentials endpoint
-app.put('/api/admin/credentials', verifyToken, async (req, res) => {
+app.put('/api/admin/credentials', verifyToken, rateLimitAdminWrite, async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -260,17 +308,28 @@ app.put('/api/admin/credentials', verifyToken, async (req, res) => {
 
   try {
     const hashedPassword = bcrypt.hashSync(password, 10);
-    
-    db.run('UPDATE admin_credentials SET username = ?, password = ? WHERE id = ?', 
+
+    db.run('UPDATE admin_credentials SET username = ?, password = ? WHERE id = ?',
       [username, hashedPassword, req.user.id], function(err) {
       if (err) {
         return res.status(500).json({ error: 'Database error' });
       }
+      logAdminAction(req, 'update_credentials', 'admin_credentials', req.user.id, { newUsername: username });
       res.json({ success: true });
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// Audit log endpoint - most recent admin logins and dashboard mutations
+app.get('/api/admin/audit-log', verifyToken, (req, res) => {
+  db.all('SELECT * FROM admin_audit_log ORDER BY created_at DESC LIMIT 200', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
 });
 
 // Shows endpoints
@@ -283,40 +342,43 @@ app.get('/api/shows', (req, res) => {
   });
 });
 
-app.post('/api/shows', verifyToken, (req, res) => {
+app.post('/api/shows', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id, date, startTime, venue, location, link } = req.body;
-  
-  db.run(`INSERT INTO shows (id, date, start_time, venue, location, link) 
-          VALUES (?, ?, ?, ?, ?, ?)`, 
+
+  db.run(`INSERT INTO shows (id, date, start_time, venue, location, link)
+          VALUES (?, ?, ?, ?, ?, ?)`,
     [id, date, startTime, venue, location, link], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'create', 'show', id);
     res.json({ success: true, id: this.lastID });
   });
 });
 
-app.put('/api/shows/:id', verifyToken, (req, res) => {
+app.put('/api/shows/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
   const { date, startTime, venue, location, link } = req.body;
-  
-  db.run(`UPDATE shows SET date = ?, start_time = ?, venue = ?, location = ?, link = ? 
-          WHERE id = ?`, 
+
+  db.run(`UPDATE shows SET date = ?, start_time = ?, venue = ?, location = ?, link = ?
+          WHERE id = ?`,
     [date, startTime, venue, location, link, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'update', 'show', id);
     res.json({ success: true });
   });
 });
 
-app.delete('/api/shows/:id', verifyToken, (req, res) => {
+app.delete('/api/shows/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
-  
+
   db.run('DELETE FROM shows WHERE id = ?', [id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'delete', 'show', id);
     res.json({ success: true });
   });
 });
@@ -331,40 +393,43 @@ app.get('/api/videos', (req, res) => {
   });
 });
 
-app.post('/api/videos', verifyToken, (req, res) => {
+app.post('/api/videos', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id, title, thumbnail, url, embedUrl } = req.body;
-  
-  db.run(`INSERT INTO videos (id, title, thumbnail, url, embed_url) 
-          VALUES (?, ?, ?, ?, ?)`, 
+
+  db.run(`INSERT INTO videos (id, title, thumbnail, url, embed_url)
+          VALUES (?, ?, ?, ?, ?)`,
     [id, title, thumbnail, url, embedUrl], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'create', 'video', id);
     res.json({ success: true });
   });
 });
 
-app.put('/api/videos/:id', verifyToken, (req, res) => {
+app.put('/api/videos/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
   const { title, thumbnail, url, embedUrl } = req.body;
-  
-  db.run(`UPDATE videos SET title = ?, thumbnail = ?, url = ?, embed_url = ? 
-          WHERE id = ?`, 
+
+  db.run(`UPDATE videos SET title = ?, thumbnail = ?, url = ?, embed_url = ?
+          WHERE id = ?`,
     [title, thumbnail, url, embedUrl, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'update', 'video', id);
     res.json({ success: true });
   });
 });
 
-app.delete('/api/videos/:id', verifyToken, (req, res) => {
+app.delete('/api/videos/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
-  
+
   db.run('DELETE FROM videos WHERE id = ?', [id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'delete', 'video', id);
     res.json({ success: true });
   });
 });
@@ -379,7 +444,7 @@ app.get('/api/products', (req, res) => {
   });
 });
 
-app.post('/api/products', verifyToken, (req, res) => {
+app.post('/api/products', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id, name, description, price, image, category, series, variants, merchize_sku } = req.body;
 
   db.run(`INSERT INTO products (id, name, description, price, image, category, series, variants, merchize_sku)
@@ -388,11 +453,12 @@ app.post('/api/products', verifyToken, (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'create', 'product', id);
     res.json({ success: true });
   });
 });
 
-app.put('/api/products/:id', verifyToken, (req, res) => {
+app.put('/api/products/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
   const { name, description, price, image, category, series, variants, sales, merchize_sku } = req.body;
 
@@ -402,17 +468,19 @@ app.put('/api/products/:id', verifyToken, (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'update', 'product', id);
     res.json({ success: true });
   });
 });
 
-app.delete('/api/products/:id', verifyToken, (req, res) => {
+app.delete('/api/products/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
-  
+
   db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'delete', 'product', id);
     res.json({ success: true });
   });
 });
@@ -427,15 +495,16 @@ app.get('/api/donations', (req, res) => {
   });
 });
 
-app.post('/api/donations', verifyToken, (req, res) => {
+app.post('/api/donations', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id, amount, donor, message, date } = req.body;
-  
-  db.run(`INSERT INTO donations (id, amount, donor, message, date) 
-          VALUES (?, ?, ?, ?, ?)`, 
+
+  db.run(`INSERT INTO donations (id, amount, donor, message, date)
+          VALUES (?, ?, ?, ?, ?)`,
     [id, amount, donor, message, date], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'create', 'donation', id);
     res.json({ success: true });
   });
 });
@@ -450,38 +519,41 @@ app.get('/api/photos', (req, res) => {
   });
 });
 
-app.post('/api/photos', verifyToken, (req, res) => {
+app.post('/api/photos', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id, title, url } = req.body;
-  
-  db.run('INSERT INTO photos (id, title, url) VALUES (?, ?, ?)', 
+
+  db.run('INSERT INTO photos (id, title, url) VALUES (?, ?, ?)',
     [id, title, url], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'create', 'photo', id);
     res.json({ success: true });
   });
 });
 
-app.put('/api/photos/:id', verifyToken, (req, res) => {
+app.put('/api/photos/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
   const { title, url } = req.body;
-  
-  db.run('UPDATE photos SET title = ?, url = ? WHERE id = ?', 
+
+  db.run('UPDATE photos SET title = ?, url = ? WHERE id = ?',
     [title, url, id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'update', 'photo', id);
     res.json({ success: true });
   });
 });
 
-app.delete('/api/photos/:id', verifyToken, (req, res) => {
+app.delete('/api/photos/:id', verifyToken, rateLimitAdminWrite, (req, res) => {
   const { id } = req.params;
-  
+
   db.run('DELETE FROM photos WHERE id = ?', [id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
+    logAdminAction(req, 'delete', 'photo', id);
     res.json({ success: true });
   });
 });
@@ -681,11 +753,11 @@ app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object;
     console.log('Payment successful:', paymentIntent.id);
-    
+
     try {
       // Parse items from metadata
       const items = JSON.parse(paymentIntent.metadata.items || '[]');
-      
+
       // Update sales for each item
       for (const item of items) {
         db.run(
@@ -700,12 +772,12 @@ app.post('/api/stripe/webhook', express.raw({type: 'application/json'}), async (
           }
         );
       }
-      
+
       // Record the sale in donations table
       const totalAmount = paymentIntent.amount / 100; // Convert from cents to dollars
       const customerEmail = paymentIntent.metadata.customer_email || 'Stripe Customer';
       const itemsList = items.map(item => `${item.name} (${item.quantity})`).join(', ');
-      
+
       db.run(
         'INSERT INTO donations (id, amount, donor, date, message) VALUES (?, ?, ?, ?, ?)',
         [
@@ -776,7 +848,9 @@ app.post('/api/merchize/webhook', (req, res) => {
   res.status(200).json({ received: true });
 });
 
-// Orders endpoints
+// Orders endpoints - contain customer PII (name/address/phone/email), so
+// both require an admin token. Nothing in the frontend calls these today;
+// the checkout flow confirms payment status directly via Stripe.js.
 app.get('/api/orders', verifyToken, (req, res) => {
   db.all('SELECT * FROM orders ORDER BY created_at DESC', [], (err, rows) => {
     if (err) {
@@ -786,7 +860,7 @@ app.get('/api/orders', verifyToken, (req, res) => {
   });
 });
 
-app.get('/api/orders/:id', (req, res) => {
+app.get('/api/orders/:id', verifyToken, (req, res) => {
   db.get('SELECT * FROM orders WHERE id = ?', [req.params.id], (err, row) => {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
@@ -798,8 +872,8 @@ app.get('/api/orders/:id', (req, res) => {
   });
 });
 
-// Get payment status
-app.get('/api/payment/:id/status', async (req, res) => {
+// Get payment status - exposes shipping/contact metadata, so admin-only.
+app.get('/api/payment/:id/status', verifyToken, async (req, res) => {
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(req.params.id);
     res.json({
