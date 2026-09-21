@@ -55,7 +55,7 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="shrink-0 opacity-90 hover:opacity-100 transition-opacity"
         >
-          <img src="/zachariah-tippett-logo.png" alt="Zachariah Tippett" className="h-10 lg:h-12 w-auto" />
+          <img src="/zachariah-tippett-logo.png" alt="Zachariah Tippett" className="h-16 lg:h-20 w-auto" />
         </button>
 
         {/* Desktop Navigation - Unorthodox style */}
