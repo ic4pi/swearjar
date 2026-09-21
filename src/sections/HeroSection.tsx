@@ -112,10 +112,20 @@ export function HeroSection() {
       id="hero"
       className="section-pinned bg-background flex flex-col z-10"
     >
+      {/* Watermark - fills the whole hero, including the empty space above the video */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.12]"
+        style={{
+          backgroundImage: 'url(/tic-happens-watermark.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
 
       {/* Main Content Container */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 lg:px-8 py-12 lg:py-16">
-        
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 lg:px-8 py-12 lg:py-16">
+
         {/* Video Gallery - Main Feature */}
         <div
           ref={videoGalleryRef}
