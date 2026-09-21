@@ -408,12 +408,66 @@ app.put('/api/products/:id', verifyToken, (req, res) => {
 
 app.delete('/api/products/:id', verifyToken, (req, res) => {
   const { id } = req.params;
-  
+
   db.run('DELETE FROM products WHERE id = ?', [id], function(err) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });
     }
     res.json({ success: true });
+  });
+});
+
+// Browse the shared Merchize account's catalog, optionally narrowed to one
+// category/collection/tag value (e.g. "Smart People"), so designs already
+// set up in Merchize can be imported below instead of re-typed by hand.
+app.get('/api/admin/merchize/products', verifyToken, async (req, res) => {
+  const label = typeof req.query.label === 'string' ? req.query.label : '';
+  const result = await merchize.listMerchizeProducts({ label });
+  if (!result.ok) {
+    return res.status(502).json(result);
+  }
+  res.json(result);
+});
+
+// Import selected Merchize catalog products as shop products. Re-running
+// this for a product already imported (same Merchize id) refreshes its
+// name/image/variants/SKUs from Merchize rather than duplicating it.
+app.post('/api/admin/merchize/import', verifyToken, (req, res) => {
+  const { items, series, price } = req.body;
+  if (!Array.isArray(items) || !items.length) {
+    return res.status(400).json({ error: 'items array required' });
+  }
+
+  let remaining = items.length;
+  let failed = false;
+  items.forEach((item) => {
+    const variants = Object.keys(item.skus || {});
+    db.run(
+      `INSERT INTO products (id, name, description, price, image, category, series, variants, merchize_sku)
+       VALUES (?, ?, ?, ?, ?, 'apparel', ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET name = excluded.name, image = excluded.image,
+         series = excluded.series, variants = excluded.variants, merchize_sku = excluded.merchize_sku`,
+      [
+        `merchize-${item.id}`,
+        item.title,
+        item.description || '',
+        Number(item.price ?? price) || 0,
+        item.image || '',
+        series || 'smart-people',
+        JSON.stringify(variants),
+        JSON.stringify(item.skus || {}),
+      ],
+      (err) => {
+        if (err) {
+          failed = true;
+          console.error('Merchize import failed for', item.title, err);
+        }
+        if (--remaining === 0) {
+          if (failed) res.status(500).json({ error: 'Some imports failed - check server logs' });
+          else res.json({ success: true, imported: items.length });
+        }
+      }
+    );
   });
 });
 

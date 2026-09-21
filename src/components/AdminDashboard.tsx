@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Show, Video as VideoType, Donation, Product } from '@/types';
+import type { Show, Video as VideoType, Donation, Product, MerchizeCatalogProduct } from '@/types';
 import { API_BASE } from '@/lib/api-config';
 
 // Debug: Log API_BASE
@@ -87,6 +87,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [merchizeLabel, setMerchizeLabel] = useState('Smart People');
+  const [merchizeResults, setMerchizeResults] = useState<MerchizeCatalogProduct[]>([]);
+  const [merchizeSelected, setMerchizeSelected] = useState<Set<string>>(new Set());
+  const [merchizeStatus, setMerchizeStatus] = useState('');
+  const [merchizeBusy, setMerchizeBusy] = useState(false);
 
   // Load data from API
   const loadData = async () => {
@@ -366,6 +371,73 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       }
     } catch (err) {
       console.error('Failed to delete product:', err);
+    }
+  };
+
+  const handleFetchMerchizeCatalog = async () => {
+    setMerchizeBusy(true);
+    setMerchizeStatus('');
+    setMerchizeResults([]);
+    setMerchizeSelected(new Set());
+    try {
+      const response = await fetch(`${API_BASE}/admin/merchize/products?label=${encodeURIComponent(merchizeLabel)}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        setMerchizeStatus(`Couldn't reach Merchize (${data.reason || response.status}). Check MERCHIZE_BASE_URL/MERCHIZE_ACCESS_TOKEN.`);
+        return;
+      }
+      setMerchizeResults(data.products);
+      setMerchizeSelected(new Set(data.products.map((p: MerchizeCatalogProduct) => p.id)));
+      if (data.products.length === 0) {
+        const known = data.labels.length ? ` Categories seen in the account: ${data.labels.join(', ')}.` : '';
+        setMerchizeStatus(`No products found under "${merchizeLabel}".${known}`);
+      }
+    } catch (err) {
+      console.error('Failed to fetch Merchize catalog:', err);
+      setMerchizeStatus('Failed to reach the server.');
+    } finally {
+      setMerchizeBusy(false);
+    }
+  };
+
+  const toggleMerchizeSelected = (id: string) => {
+    setMerchizeSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleImportMerchizeSelected = async () => {
+    const items = merchizeResults.filter((p) => merchizeSelected.has(p.id));
+    if (!items.length) return;
+    setMerchizeBusy(true);
+    setMerchizeStatus('');
+    try {
+      const response = await fetch(`${API_BASE}/admin/merchize/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ items, series: 'smart-people', price: 45 }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMerchizeStatus(`Imported ${data.imported} product(s) into Smart People.`);
+        setMerchizeResults([]);
+        setMerchizeSelected(new Set());
+        await loadData();
+      } else {
+        setMerchizeStatus(data.error || 'Import failed.');
+      }
+    } catch (err) {
+      console.error('Failed to import from Merchize:', err);
+      setMerchizeStatus('Failed to reach the server.');
+    } finally {
+      setMerchizeBusy(false);
     }
   };
 
@@ -692,6 +764,50 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               </ul>
             </div>
 
+            <div className="bg-background border border-border rounded-lg p-4 space-y-3">
+              <h4 className="font-bold">Import from Merchize</h4>
+              <p className="text-sm text-muted-foreground">
+                Pull designs already set up in the shared Merchize account by category. Imported
+                products land in the "Smart People" shop section.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  value={merchizeLabel}
+                  onChange={(e) => setMerchizeLabel(e.target.value)}
+                  placeholder="Merchize category (e.g. Smart People)"
+                  className="sm:flex-1"
+                />
+                <Button onClick={handleFetchMerchizeCatalog} disabled={merchizeBusy || !merchizeLabel} size="sm">
+                  {merchizeBusy ? 'Working...' : 'Fetch'}
+                </Button>
+              </div>
+              {merchizeStatus && <p className="text-sm text-muted-foreground">{merchizeStatus}</p>}
+              {merchizeResults.length > 0 && (
+                <div className="space-y-2">
+                  {merchizeResults.map((p) => (
+                    <label key={p.id} className="flex items-center gap-3 p-2 border border-border rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={merchizeSelected.has(p.id)}
+                        onChange={() => toggleMerchizeSelected(p.id)}
+                      />
+                      {p.image && <img src={p.image} alt={p.title} className="w-10 h-10 object-cover rounded" />}
+                      <span className="text-sm flex-1">{p.title}</span>
+                      <span className="text-xs text-muted-foreground">{p.sizes.length} size(s)</span>
+                    </label>
+                  ))}
+                  <Button
+                    onClick={handleImportMerchizeSelected}
+                    disabled={merchizeBusy || merchizeSelected.size === 0}
+                    size="sm"
+                    className="btn-primary"
+                  >
+                    Import {merchizeSelected.size} selected
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-lg">Products</h3>
               <Button onClick={handleAddProduct} size="sm" className="btn-primary">
@@ -699,7 +815,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 Add Product
               </Button>
             </div>
-            
+
             <div className="space-y-3">
               {products.map((product) => (
                 <div key={product.id} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-3 bg-background border border-border rounded-lg">
@@ -738,6 +854,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     <option value="">No series (accessories)</option>
                     <option value="activism">Activism (Tourette's)</option>
                     <option value="funny">Funny (no category)</option>
+                    <option value="smart-people">Smart People</option>
                   </select>
                   <div className="flex gap-2">
                     <button
