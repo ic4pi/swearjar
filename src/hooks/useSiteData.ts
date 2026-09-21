@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
-import { api, type Show, type Video, type Product, type Donation, type Photo } from '@/lib/api';
+import { api, type Show, type Product, type SiteSettings } from '@/lib/api';
+import type { Video } from '@/types';
 
-// Fallback data in case API is not available
+// Fallback / built-in data. Shows always start here and get replaced once
+// /api/shows answers. Products stay here permanently as the base catalog —
+// /api/products only carries what's been added or edited through /admin,
+// merged in below by name (same pattern hexpo's storefront uses: a
+// product added through the dashboard is additive, one edited there
+// overrides its built-in card in place).
 const fallbackShows: Show[] = [
   {
     id: '1',
@@ -26,6 +32,8 @@ const fallbackShows: Show[] = [
   }
 ];
 
+// No backend endpoint manages videos (out of scope for the current admin
+// dashboard — see the migration notes), so this is simply the hero clip.
 const fallbackVideos: Video[] = [
   {
     id: '1',
@@ -47,10 +55,6 @@ const fallbackProducts: Product[] = [
     category: 'apparel',
     series: 'activism',
     variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
-    merchize_sku: JSON.stringify({
-      S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
-      '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
-    }),
   },
   // Funny series - no category, just laughs. Also sourced from the shared Merchize catalog.
   {
@@ -62,10 +66,6 @@ const fallbackProducts: Product[] = [
     category: 'apparel',
     series: 'funny',
     variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
-    merchize_sku: JSON.stringify({
-      S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
-      '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
-    }),
   },
   // Accessories - single placeholder until real accessory products are added.
   {
@@ -79,6 +79,32 @@ const fallbackProducts: Product[] = [
   },
 ];
 
+const fallbackSettings: SiteSettings = { cashAppTag: '$TourettesInc' };
+
+// Merges products fetched from /api/products into the built-in list by
+// name: a name that matches a built-in gets that card's price/description/
+// image/variants updated in place (so an edit made in /admin — including
+// one made to an original hoodie after it's imported there — actually
+// shows up); anything new is appended. A catalog fetch failing must never
+// be able to take the storefront's built-ins down.
+function mergeProducts(builtIn: Product[], dynamic: Product[]): Product[] {
+  const merged = builtIn.map((p) => ({ ...p }));
+  const byName = new Map(merged.map((p) => [p.name, p]));
+  for (const p of dynamic) {
+    const existing = byName.get(p.name);
+    if (existing) {
+      if (p.description) existing.description = p.description;
+      if (p.price) existing.price = p.price;
+      if (p.image) existing.image = p.image;
+      if (p.variants && p.variants.length) existing.variants = p.variants;
+      if (p.series) existing.series = p.series;
+    } else {
+      merged.push({ ...p });
+    }
+  }
+  return merged;
+}
+
 // Hook for shows
 export function useShows() {
   const [shows, setShows] = useState<Show[]>(fallbackShows);
@@ -89,7 +115,7 @@ export function useShows() {
     try {
       setLoading(true);
       const data = await api.getShows();
-      setShows(data);
+      setShows(data.length ? data : fallbackShows);
       setError(null);
     } catch (err) {
       console.warn('Failed to load shows from API, using fallback data:', err);
@@ -107,32 +133,10 @@ export function useShows() {
   return { shows, loading, error, refetch: loadShows };
 }
 
-// Hook for videos
+// Hook for the hero video clip(s). Static for now - see the fallbackVideos
+// note above.
 export function useVideos() {
-  const [videos, setVideos] = useState<Video[]>(fallbackVideos);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadVideos = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getVideos();
-      setVideos(data);
-      setError(null);
-    } catch (err) {
-      console.warn('Failed to load videos from API, using fallback data:', err);
-      setVideos(fallbackVideos);
-      setError('Using offline data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadVideos();
-  }, []);
-
-  return { videos, loading, error, refetch: loadVideos };
+  return { videos: fallbackVideos, loading: false, error: null, refetch: () => {} };
 }
 
 // Hook for products
@@ -144,11 +148,11 @@ export function useProducts() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await api.getProducts();
-      setProducts(data);
+      const dynamic = await api.getProducts();
+      setProducts(mergeProducts(fallbackProducts, dynamic));
       setError(null);
     } catch (err) {
-      console.warn('Failed to load products from API, using fallback data:', err);
+      console.warn('Failed to load products from API, using built-in catalog:', err);
       setProducts(fallbackProducts);
       setError('Using offline data');
     } finally {
@@ -163,60 +167,29 @@ export function useProducts() {
   return { products, loading, error, refetch: loadProducts };
 }
 
-// Hook for donations
-export function useDonations() {
-  const [donations, setDonations] = useState<Donation[]>([]);
+// Hook for site settings (currently just the donate button's Cash App tag)
+export function useSiteSettings() {
+  const [settings, setSettings] = useState<SiteSettings>(fallbackSettings);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadDonations = async () => {
+  const loadSettings = async () => {
     try {
       setLoading(true);
-      const data = await api.getDonations();
-      setDonations(data);
-      setError(null);
+      const data = await api.getSettings();
+      setSettings({ ...fallbackSettings, ...data });
     } catch (err) {
-      console.warn('Failed to load donations from API:', err);
-      setDonations([]);
-      setError('No donation data available');
+      console.warn('Failed to load settings from API, using fallback data:', err);
+      setSettings(fallbackSettings);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDonations();
+    loadSettings();
   }, []);
 
-  return { donations, loading, error, refetch: loadDonations };
-}
-
-// Hook for photos
-export function usePhotos() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPhotos = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getPhotos();
-      setPhotos(data);
-      setError(null);
-    } catch (err) {
-      console.warn('Failed to load photos from API:', err);
-      setPhotos([]);
-      setError('No photo data available');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPhotos();
-  }, []);
-
-  return { photos, loading, error, refetch: loadPhotos };
+  return { settings, loading, refetch: loadSettings };
 }
 
 // Combined hook for all data
@@ -224,26 +197,22 @@ export function useSiteData() {
   const shows = useShows();
   const videos = useVideos();
   const products = useProducts();
-  const donations = useDonations();
-  const photos = usePhotos();
+  const settings = useSiteSettings();
 
-  const loading = shows.loading || videos.loading || products.loading || donations.loading || photos.loading;
-  const hasError = !!shows.error || !!videos.error || !!products.error || !!donations.error || !!photos.error;
+  const loading = shows.loading || products.loading || settings.loading;
+  const hasError = !!shows.error || !!products.error;
 
   return {
     shows: shows.shows,
     videos: videos.videos,
     products: products.products,
-    donations: donations.donations,
-    photos: photos.photos,
+    settings: settings.settings,
     loading,
     hasError,
     refetch: () => {
       shows.refetch();
-      videos.refetch();
       products.refetch();
-      donations.refetch();
-      photos.refetch();
+      settings.refetch();
     }
   };
 }
