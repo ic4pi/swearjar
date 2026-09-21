@@ -6,9 +6,11 @@ import { Cart } from '@/components/Cart';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { DonateModal } from '@/components/DonateModal';
 import { HeroSection } from '@/sections/HeroSection';
+import { VideoSection } from '@/sections/VideoSection';
 import { AboutSection } from '@/sections/AboutSection';
 import { ProductsSection } from '@/sections/ProductsSection';
 import { SupportSection } from '@/sections/SupportSection';
+import { PhotosSection } from '@/sections/PhotosSection';
 import { ClosingSection } from '@/sections/ClosingSection';
 import { Footer } from '@/sections/Footer';
 import { NotFoundPage } from '@/components/NotFoundPage';
@@ -145,9 +147,11 @@ function App() {
         {isValidRoute() ? (
           <>
             <HeroSection />
+            <VideoSection />
             <ProductsSection />
             <AboutSection onDonateClick={() => setIsDonateOpen(true)} />
             <SupportSection onDonateClick={() => setIsDonateOpen(true)} />
+            <PhotosSection />
             <ClosingSection />
           </>
         ) : (

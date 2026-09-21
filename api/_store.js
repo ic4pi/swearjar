@@ -22,32 +22,40 @@ const STORE_PATH = 'store/site-data.json';
 
 const DEFAULTS = {
   shows: [],
+  videos: [],
+  photos: [],
   settings: { cashAppTag: '$TourettesInc' },
 };
+
+function defaults() {
+  return { shows: [], videos: [], photos: [], settings: { ...DEFAULTS.settings } };
+}
 
 function configured() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 async function readStore() {
-  if (!configured()) return { shows: [...DEFAULTS.shows], settings: { ...DEFAULTS.settings } };
+  if (!configured()) return defaults();
 
   try {
     const { blobs } = await list({ prefix: STORE_PATH, limit: 1 });
     const entry = blobs.find((b) => b.pathname === STORE_PATH);
-    if (!entry) return { shows: [...DEFAULTS.shows], settings: { ...DEFAULTS.settings } };
+    if (!entry) return defaults();
 
     const res = await fetch(entry.url, { cache: 'no-store' });
-    if (!res.ok) return { shows: [...DEFAULTS.shows], settings: { ...DEFAULTS.settings } };
+    if (!res.ok) return defaults();
 
     const data = await res.json();
     return {
       shows: Array.isArray(data.shows) ? data.shows : [],
+      videos: Array.isArray(data.videos) ? data.videos : [],
+      photos: Array.isArray(data.photos) ? data.photos : [],
       settings: { ...DEFAULTS.settings, ...(data && typeof data.settings === 'object' ? data.settings : {}) },
     };
   } catch (err) {
     console.error('site store read failed:', err.message);
-    return { shows: [...DEFAULTS.shows], settings: { ...DEFAULTS.settings } };
+    return defaults();
   }
 }
 

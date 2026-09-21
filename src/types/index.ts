@@ -49,6 +49,12 @@ export interface Video {
   embedUrl?: string;
 }
 
+export interface Photo {
+  id: string;
+  title: string;
+  url: string;
+}
+
 export interface SiteSettings {
   cashAppTag: string;
 }
