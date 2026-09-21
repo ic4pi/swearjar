@@ -1,7 +1,7 @@
 import { API_BASE } from './api-config';
-import type { Show, Product, SiteSettings } from '@/types';
+import type { Show, Product, SiteSettings, Video, Photo } from '@/types';
 
-export type { Show, Product, SiteSettings };
+export type { Show, Product, SiteSettings, Video, Photo };
 
 // Public, unauthenticated reads. The storefront falls back to its own
 // hardcoded data (see useSiteData.ts, src/data/siteData.ts) if any of
@@ -26,6 +26,20 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch settings');
     const data = await response.json();
     return data.settings;
+  },
+
+  async getVideos(): Promise<Video[]> {
+    const response = await fetch(`${API_BASE}/videos`);
+    if (!response.ok) throw new Error('Failed to fetch videos');
+    const data = await response.json();
+    return data.videos;
+  },
+
+  async getPhotos(): Promise<Photo[]> {
+    const response = await fetch(`${API_BASE}/photos`);
+    if (!response.ok) throw new Error('Failed to fetch photos');
+    const data = await response.json();
+    return data.photos;
   },
 };
 

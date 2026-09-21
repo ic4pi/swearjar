@@ -358,6 +358,90 @@ async function deleteShow(body) {
   return { ok: true };
 }
 
+/* ── Videos ── */
+
+function shapeVideo(body, id) {
+  return {
+    id,
+    title: String(body.title || '').trim(),
+    thumbnail: typeof body.thumbnail === 'string' ? body.thumbnail : '',
+    url: typeof body.url === 'string' ? body.url : '',
+    embedUrl: typeof body.embedUrl === 'string' ? body.embedUrl : '',
+  };
+}
+
+async function addVideo(body) {
+  if (!String(body.title || '').trim() || !String(body.embedUrl || '').trim()) {
+    return { error: 'Title and embed URL are required' };
+  }
+  const store = await readStore();
+  const video = shapeVideo(body, crypto.randomUUID());
+  store.videos = [video, ...store.videos];
+  await writeStore(store);
+  return { video };
+}
+
+async function updateVideo(body) {
+  const id = String(body.id || '');
+  if (!id) return { error: 'Bad video id' };
+  const store = await readStore();
+  const idx = store.videos.findIndex((v) => v.id === id);
+  if (idx === -1) return { error: 'Video not found' };
+  const merged = { ...store.videos[idx], ...body, id };
+  store.videos[idx] = shapeVideo(merged, id);
+  await writeStore(store);
+  return { video: store.videos[idx] };
+}
+
+async function deleteVideo(body) {
+  const id = String(body.id || '');
+  const store = await readStore();
+  store.videos = store.videos.filter((v) => v.id !== id);
+  await writeStore(store);
+  return { ok: true };
+}
+
+/* ── Photos ── */
+
+function shapePhoto(body, id) {
+  return {
+    id,
+    title: String(body.title || '').trim(),
+    url: String(body.url || '').trim(),
+  };
+}
+
+async function addPhoto(body) {
+  if (!String(body.url || '').trim()) {
+    return { error: 'Image URL is required' };
+  }
+  const store = await readStore();
+  const photo = shapePhoto(body, crypto.randomUUID());
+  store.photos = [photo, ...store.photos];
+  await writeStore(store);
+  return { photo };
+}
+
+async function updatePhoto(body) {
+  const id = String(body.id || '');
+  if (!id) return { error: 'Bad photo id' };
+  const store = await readStore();
+  const idx = store.photos.findIndex((p) => p.id === id);
+  if (idx === -1) return { error: 'Photo not found' };
+  const merged = { ...store.photos[idx], ...body, id };
+  store.photos[idx] = shapePhoto(merged, id);
+  await writeStore(store);
+  return { photo: store.photos[idx] };
+}
+
+async function deletePhoto(body) {
+  const id = String(body.id || '');
+  const store = await readStore();
+  store.photos = store.photos.filter((p) => p.id !== id);
+  await writeStore(store);
+  return { ok: true };
+}
+
 /* ── Settings ── */
 
 async function updateSettings(body) {
@@ -467,6 +551,80 @@ module.exports = async (req, res) => {
         return;
       }
       res.status(200).json(await deleteShow(req.body || {}));
+      return;
+    }
+
+    if (action === 'add-video') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await addVideo(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'update-video') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await updateVideo(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'delete-video') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      res.status(200).json(await deleteVideo(req.body || {}));
+      return;
+    }
+
+    if (action === 'add-photo') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await addPhoto(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'update-photo') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await updatePhoto(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'delete-photo') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      res.status(200).json(await deletePhoto(req.body || {}));
       return;
     }
 

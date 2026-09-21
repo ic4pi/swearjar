@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api, type Show, type Product, type SiteSettings } from '@/lib/api';
-import type { Video } from '@/types';
+import { api, type Show, type Product, type SiteSettings, type Video, type Photo } from '@/lib/api';
 
 // Fallback / built-in data. Shows always start here and get replaced once
 // /api/shows answers. Products stay here permanently as the base catalog —
@@ -32,8 +31,7 @@ const fallbackShows: Show[] = [
   }
 ];
 
-// No backend endpoint manages videos (out of scope for the current admin
-// dashboard — see the migration notes), so this is simply the hero clip.
+// Shown until /api/videos answers, and again if it fails.
 const fallbackVideos: Video[] = [
   {
     id: '1',
@@ -133,10 +131,61 @@ export function useShows() {
   return { shows, loading, error, refetch: loadShows };
 }
 
-// Hook for the hero video clip(s). Static for now - see the fallbackVideos
-// note above.
+// Hook for the hero video clip(s)
 export function useVideos() {
-  return { videos: fallbackVideos, loading: false, error: null, refetch: () => {} };
+  const [videos, setVideos] = useState<Video[]>(fallbackVideos);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getVideos();
+      setVideos(data.length ? data : fallbackVideos);
+      setError(null);
+    } catch (err) {
+      console.warn('Failed to load videos from API, using fallback data:', err);
+      setVideos(fallbackVideos);
+      setError('Using offline data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  return { videos, loading, error, refetch: loadVideos };
+}
+
+// Hook for the photo gallery. No built-in fallback - an empty gallery
+// just doesn't render (see PhotosSection.tsx).
+export function usePhotos() {
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPhotos = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getPhotos();
+      setPhotos(data);
+      setError(null);
+    } catch (err) {
+      console.warn('Failed to load photos from API:', err);
+      setPhotos([]);
+      setError('Using offline data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPhotos();
+  }, []);
+
+  return { photos, loading, error, refetch: loadPhotos };
 }
 
 // Hook for products
@@ -196,21 +245,25 @@ export function useSiteSettings() {
 export function useSiteData() {
   const shows = useShows();
   const videos = useVideos();
+  const photos = usePhotos();
   const products = useProducts();
   const settings = useSiteSettings();
 
-  const loading = shows.loading || products.loading || settings.loading;
-  const hasError = !!shows.error || !!products.error;
+  const loading = shows.loading || videos.loading || photos.loading || products.loading || settings.loading;
+  const hasError = !!shows.error || !!videos.error || !!photos.error || !!products.error;
 
   return {
     shows: shows.shows,
     videos: videos.videos,
+    photos: photos.photos,
     products: products.products,
     settings: settings.settings,
     loading,
     hasError,
     refetch: () => {
       shows.refetch();
+      videos.refetch();
+      photos.refetch();
       products.refetch();
       settings.refetch();
     }

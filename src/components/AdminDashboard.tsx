@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, LogOut, Calendar, ShoppingBag, DollarSign } from 'lucide-react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, LogOut, Calendar, ShoppingBag, DollarSign, Video as VideoIcon, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Show, Product, MerchizeCatalogProduct } from '@/types';
+import type { Show, Product, MerchizeCatalogProduct, Video, Photo } from '@/types';
 import { adminApi, api } from '@/lib/api';
 
 interface AdminDashboardProps {
@@ -55,6 +55,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
   // Admin data state
   const [shows, setShows] = useState<Show[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [cashAppTagDraft, setCashAppTagDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -68,8 +70,15 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
 
   const loadData = async (token: string) => {
     try {
-      const [showsData, productsData] = await Promise.all([api.getShows(), api.getProducts()]);
+      const [showsData, videosData, photosData, productsData] = await Promise.all([
+        api.getShows(),
+        api.getVideos(),
+        api.getPhotos(),
+        api.getProducts(),
+      ]);
       setShows(showsData);
+      setVideos(videosData);
+      setPhotos(photosData);
       setProducts(productsData);
       const { settings: s } = await adminApi.get(token, 'settings');
       setCashAppTagDraft(s.cashAppTag || '');
@@ -141,6 +150,80 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       await loadData(authToken);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete show');
+    }
+  };
+
+  // ── Videos ──
+
+  const handleAddVideo = async () => {
+    setBusy(true);
+    try {
+      await adminApi.call(authToken, 'add-video', {
+        title: 'New Video',
+        thumbnail: '/video_reel.jpg',
+        url: '',
+        embedUrl: '',
+      });
+      await loadData(authToken);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to add video');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUpdateVideo = async (id: string, field: keyof Video, value: string) => {
+    setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
+    try {
+      await adminApi.call(authToken, 'update-video', { id, [field]: value });
+    } catch (err) {
+      console.error('Failed to update video:', err);
+      await loadData(authToken);
+    }
+  };
+
+  const handleDeleteVideo = async (id: string) => {
+    try {
+      await adminApi.call(authToken, 'delete-video', { id });
+      await loadData(authToken);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete video');
+    }
+  };
+
+  // ── Photos ──
+
+  const handleAddPhoto = async () => {
+    setBusy(true);
+    try {
+      await adminApi.call(authToken, 'add-photo', {
+        title: 'Show Photo',
+        url: 'https://via.placeholder.com/400x300.png?text=Your+Photo+Here',
+      });
+      await loadData(authToken);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to add photo');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleUpdatePhoto = async (id: string, field: keyof Photo, value: string) => {
+    setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+    try {
+      await adminApi.call(authToken, 'update-photo', { id, [field]: value });
+    } catch (err) {
+      console.error('Failed to update photo:', err);
+      await loadData(authToken);
+    }
+  };
+
+  const handleDeletePhoto = async (id: string) => {
+    try {
+      await adminApi.call(authToken, 'delete-photo', { id });
+      await loadData(authToken);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete photo');
     }
   };
 
@@ -348,10 +431,18 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
         </DialogHeader>
 
         <Tabs defaultValue="shows" className="pt-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="shows">
               <Calendar className="w-4 h-4 mr-2" />
               Shows
+            </TabsTrigger>
+            <TabsTrigger value="videos">
+              <VideoIcon className="w-4 h-4 mr-2" />
+              Videos
+            </TabsTrigger>
+            <TabsTrigger value="photos">
+              <Image className="w-4 h-4 mr-2" />
+              Photos
             </TabsTrigger>
             <TabsTrigger value="products">
               <ShoppingBag className="w-4 h-4 mr-2" />
@@ -408,6 +499,96 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               ))}
               {shows.length === 0 && (
                 <p className="text-muted-foreground text-center py-8">No shows added yet.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Videos Tab */}
+          <TabsContent value="videos" className="space-y-4">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">
+                Embed URL example: https://www.youtube.com/embed/dQw4w9WgXcQ. The first video plays
+                in the hero at the top of the page; every video shows further down in "Watch the Set".
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Video Gallery</h3>
+              <Button onClick={handleAddVideo} size="sm" className="btn-primary" disabled={busy}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Video
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {videos.map((video) => (
+                <div key={video.id} className="grid grid-cols-3 gap-3 p-3 bg-background border border-border rounded-lg">
+                  <Input
+                    value={video.title}
+                    onChange={(e) => handleUpdateVideo(video.id, 'title', e.target.value)}
+                    placeholder="Title"
+                  />
+                  <Input
+                    value={video.embedUrl || ''}
+                    onChange={(e) => handleUpdateVideo(video.id, 'embedUrl', e.target.value)}
+                    placeholder="YouTube Embed URL"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={video.thumbnail}
+                      onChange={(e) => handleUpdateVideo(video.id, 'thumbnail', e.target.value)}
+                      placeholder="Thumbnail URL"
+                    />
+                    <button
+                      onClick={() => handleDeleteVideo(video.id)}
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {videos.length === 0 && (
+                <p className="text-muted-foreground text-center py-8">No videos added yet.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Photos Tab */}
+          <TabsContent value="photos" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Photo Gallery</h3>
+              <Button onClick={handleAddPhoto} size="sm" className="btn-primary" disabled={busy}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Photo
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {photos.map((photo) => (
+                <div key={photo.id} className="grid grid-cols-3 gap-3 p-3 bg-background border border-border rounded-lg">
+                  <Input
+                    value={photo.title}
+                    onChange={(e) => handleUpdatePhoto(photo.id, 'title', e.target.value)}
+                    placeholder="e.g., Show Photo, Fan Picture, etc."
+                  />
+                  <Input
+                    value={photo.url}
+                    onChange={(e) => handleUpdatePhoto(photo.id, 'url', e.target.value)}
+                    placeholder="https://i.imgur.com/yourimage.jpg"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id)}
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {photos.length === 0 && (
+                <p className="text-muted-foreground text-center py-8">No photos added yet.</p>
               )}
             </div>
           </TabsContent>
