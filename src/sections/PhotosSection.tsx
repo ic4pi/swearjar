@@ -46,7 +46,7 @@ export function PhotosSection() {
     <section
       ref={sectionRef}
       id="photos"
-      className="relative bg-background py-20 lg:py-32 z-30"
+      className="relative py-20 lg:py-32 z-30"
     >
       <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto">
         <div className="text-center mb-12 lg:mb-16">

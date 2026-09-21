@@ -6,7 +6,6 @@ import { Cart } from '@/components/Cart';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { DonateModal } from '@/components/DonateModal';
 import { HeroSection } from '@/sections/HeroSection';
-import { VideoSection } from '@/sections/VideoSection';
 import { AboutSection } from '@/sections/AboutSection';
 import { ProductsSection } from '@/sections/ProductsSection';
 import { SupportSection } from '@/sections/SupportSection';
@@ -134,7 +133,7 @@ function App() {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       {/* Navigation */}
       <Navigation
         cartCount={cartCount}
@@ -147,7 +146,6 @@ function App() {
         {isValidRoute() ? (
           <>
             <HeroSection />
-            <VideoSection />
             <ProductsSection />
             <AboutSection onDonateClick={() => setIsDonateOpen(true)} />
             <SupportSection onDonateClick={() => setIsDonateOpen(true)} />

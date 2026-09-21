@@ -178,7 +178,7 @@ export function ProductsSection() {
     <section
       ref={sectionRef}
       id="shop"
-      className="relative min-h-screen bg-background py-20 lg:py-32 z-40"
+      className="relative min-h-screen py-20 lg:py-32 z-40"
     >
 
       <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto space-y-20 lg:space-y-32">
