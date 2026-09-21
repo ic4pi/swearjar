@@ -1,6 +1,10 @@
 const Stripe = require('stripe');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Guarded the same way as _catalog.js: Stripe's constructor throws
+// synchronously on a missing key, which at module load time would take
+// this whole function down before the handler below gets a chance to
+// answer with a clear error instead.
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const { createMerchizeOrder } = require('./merchize');
 
 // Webhook signature verification needs the raw request body, so Vercel's
@@ -19,6 +23,10 @@ function readRawBody(req) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).end();
+    return;
+  }
+  if (!stripe) {
+    res.status(503).end();
     return;
   }
 

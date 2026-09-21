@@ -4,7 +4,11 @@ const { listMerchizeProducts } = require('./merchize');
 const { readStore, writeStore } = require('./_store');
 const { APPAREL, ACCESSORIES } = require('./_apparel');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Guarded the same way as _catalog.js: Stripe's constructor throws
+// synchronously on a missing key, which at module load time would take
+// this whole function down before the handler below gets a chance to
+// answer with a clear 503 instead.
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 /* ── ADMIN API ──────────────────────────────────────────────────────────
    One function handling every dashboard action, selected by ?action=.
@@ -393,6 +397,16 @@ module.exports = async (req, res) => {
 
   if (!authed(req)) {
     res.status(401).json({ error: 'Not signed in' });
+    return;
+  }
+
+  // Shows and settings live in Blob storage, not Stripe — only the
+  // product actions need a working Stripe client.
+  const STRIPE_ACTIONS = new Set([
+    'create-product', 'update-product', 'archive-product', 'import-legacy', 'merchize-scan', 'merchize-import',
+  ]);
+  if (STRIPE_ACTIONS.has(action) && !stripe) {
+    res.status(503).json({ error: 'STRIPE_SECRET_KEY is not set on this deployment.' });
     return;
   }
 

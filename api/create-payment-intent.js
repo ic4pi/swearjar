@@ -2,7 +2,11 @@ const Stripe = require('stripe');
 const { findByName } = require('./_catalog');
 const { isApparel, isAccessory, priceCents: builtInPriceCents, sizesFor } = require('./_apparel');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Guarded the same way as _catalog.js: Stripe's constructor throws
+// synchronously on a missing key, which at module load time would take
+// this whole function down before the handler below gets a chance to
+// answer with a clear error instead.
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Shipping fields the frontend's ShippingDialog collects (src/types/index.ts
 // ShippingInfo) — same set the old backend required, kept as-is so the
@@ -44,6 +48,10 @@ async function resolveItem(name) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  if (!stripe) {
+    res.status(503).json({ error: 'Checkout is not configured on this deployment.' });
     return;
   }
 
