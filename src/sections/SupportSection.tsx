@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '@/components/ui/button';
 import { Heart, Coffee, ExternalLink } from 'lucide-react';
-import { cashAppTag } from '@/data/siteData';
+import { useSiteSettings } from '@/hooks/useSiteData';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -14,6 +14,8 @@ interface SupportSectionProps {
 export function SupportSection({ onDonateClick: _onDonateClick }: SupportSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { settings } = useSiteSettings();
+  const cashAppTag = settings.cashAppTag;
 
   useEffect(() => {
     if (!sectionRef.current) return;

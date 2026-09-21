@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
-import { api, type Show, type Video, type Product, type Donation, type Photo } from '@/lib/api';
+import { api, type Show, type Product, type SiteSettings } from '@/lib/api';
+import type { Video } from '@/types';
 
-// Fallback data in case API is not available
+// Fallback / built-in data. Shows always start here and get replaced once
+// /api/shows answers. Products stay here permanently as the base catalog —
+// /api/products only carries what's been added or edited through /admin,
+// merged in below by name (same pattern hexpo's storefront uses: a
+// product added through the dashboard is additive, one edited there
+// overrides its built-in card in place).
 const fallbackShows: Show[] = [
   {
     id: '1',
@@ -26,6 +32,8 @@ const fallbackShows: Show[] = [
   }
 ];
 
+// No backend endpoint manages videos (out of scope for the current admin
+// dashboard — see the migration notes), so this is simply the hero clip.
 const fallbackVideos: Video[] = [
   {
     id: '1',
@@ -37,99 +45,29 @@ const fallbackVideos: Video[] = [
 ];
 
 const fallbackProducts: Product[] = [
-  // Activism series - Tourette's awareness designs
+  // Activism series - Tourette's awareness design, sourced from the shared Merchize catalog.
   {
-    id: '1',
-    name: 'Tic & Talk Hoodie',
-    description: 'Start conversations. Spread awareness. Stay comfortable.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '2',
-    name: '1 in 100 Hoodie',
-    description: '1 in 100 school-aged kids have Tourette\'s. Wear the stat, start the conversation.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '3',
-    name: 'Warrior Hoodie',
-    description: 'For the fighters. For the advocates. For everyone.',
-    price: 48,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '4',
-    name: 'Awareness Ambassador Hoodie',
-    description: 'Be an ambassador for understanding. Wear it proudly.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '9',
+    id: 'merchize-6aadba87bea1cd6d573856e0',
     name: "Tourette's Awareness Hoodie",
-    description: "Design by Smart_Ppl. Wear the awareness, start the conversation.",
-    price: 45,
-    image: '/product_sweater_1.jpg',
+    description: "Lightweight hoodie featuring the Tourette's Awareness design.",
+    price: 40,
+    image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadba87bea1cd5ed93856e8/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_90db55b3-16de-4f2c-9553-62816054634a/front-name:Front-aNHaEugAF/thumb.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie']
+    variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
   },
-  // Funny series - no category, just laughs
+  // Funny series - no category, just laughs. Also sourced from the shared Merchize catalog.
   {
-    id: '5',
-    name: 'Laugh Out Loud Hoodie',
-    description: 'No cause, no message. Just funny.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
+    id: 'merchize-6aadda6ce0acc7c2b004f022',
+    name: 'I Heart White Collar Crime Hoodie',
+    description: 'Lightweight hoodie featuring the "I Heart White Collar Crime" design.',
+    price: 40,
+    image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadda6ce0acc7442a04f02a/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_dc694d11-0341-4524-a591-c10ecd2aa4fe/front-name:Front-QQ5r8I1WG/thumb.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+    variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
   },
-  {
-    id: '6',
-    name: 'Stage Ready Hoodie',
-    description: 'Comfortable enough for the green room, funny enough for the front row.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '7',
-    name: 'Comedy Club Hoodie',
-    description: 'For anyone who thinks they could probably do five minutes too.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '8',
-    name: 'Zachariah Tippett Original Hoodie',
-    description: 'The original. The classic. The statement.',
-    price: 48,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie']
-  },
-  // Accessories
+  // Accessories - single placeholder until real accessory products are added.
   {
     id: 'a1',
     name: 'Sticker Pack',
@@ -139,33 +77,33 @@ const fallbackProducts: Product[] = [
     category: 'accessories',
     variants: ['Standard Pack']
   },
-  {
-    id: 'a2',
-    name: 'Morning Mug',
-    description: 'Start your day with a smile and a cause. 11oz ceramic.',
-    price: 16,
-    image: '/shop_mug.jpg',
-    category: 'accessories',
-    variants: ['11oz Mug']
-  },
-  {
-    id: 'a3',
-    name: 'Enamel Pin Set',
-    description: 'Wear your support. Collectible quality pins.',
-    price: 12,
-    image: '/product_pin_1.jpg',
-    category: 'accessories',
-    variants: ['Set of 3']
-  },
-  {
-    id: 'a4',
-    name: 'Tote Bag',
-    description: 'Carry the message. Durable canvas, bold design.',
-    price: 22,
-    image: '/product_tote_1.jpg',
-    category: 'accessories',
-    variants: ['Standard Tote']  }
 ];
+
+const fallbackSettings: SiteSettings = { cashAppTag: '$TourettesInc' };
+
+// Merges products fetched from /api/products into the built-in list by
+// name: a name that matches a built-in gets that card's price/description/
+// image/variants updated in place (so an edit made in /admin — including
+// one made to an original hoodie after it's imported there — actually
+// shows up); anything new is appended. A catalog fetch failing must never
+// be able to take the storefront's built-ins down.
+function mergeProducts(builtIn: Product[], dynamic: Product[]): Product[] {
+  const merged = builtIn.map((p) => ({ ...p }));
+  const byName = new Map(merged.map((p) => [p.name, p]));
+  for (const p of dynamic) {
+    const existing = byName.get(p.name);
+    if (existing) {
+      if (p.description) existing.description = p.description;
+      if (p.price) existing.price = p.price;
+      if (p.image) existing.image = p.image;
+      if (p.variants && p.variants.length) existing.variants = p.variants;
+      if (p.series) existing.series = p.series;
+    } else {
+      merged.push({ ...p });
+    }
+  }
+  return merged;
+}
 
 // Hook for shows
 export function useShows() {
@@ -177,7 +115,7 @@ export function useShows() {
     try {
       setLoading(true);
       const data = await api.getShows();
-      setShows(data);
+      setShows(data.length ? data : fallbackShows);
       setError(null);
     } catch (err) {
       console.warn('Failed to load shows from API, using fallback data:', err);
@@ -195,32 +133,10 @@ export function useShows() {
   return { shows, loading, error, refetch: loadShows };
 }
 
-// Hook for videos
+// Hook for the hero video clip(s). Static for now - see the fallbackVideos
+// note above.
 export function useVideos() {
-  const [videos, setVideos] = useState<Video[]>(fallbackVideos);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadVideos = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getVideos();
-      setVideos(data);
-      setError(null);
-    } catch (err) {
-      console.warn('Failed to load videos from API, using fallback data:', err);
-      setVideos(fallbackVideos);
-      setError('Using offline data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadVideos();
-  }, []);
-
-  return { videos, loading, error, refetch: loadVideos };
+  return { videos: fallbackVideos, loading: false, error: null, refetch: () => {} };
 }
 
 // Hook for products
@@ -232,11 +148,11 @@ export function useProducts() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await api.getProducts();
-      setProducts(data);
+      const dynamic = await api.getProducts();
+      setProducts(mergeProducts(fallbackProducts, dynamic));
       setError(null);
     } catch (err) {
-      console.warn('Failed to load products from API, using fallback data:', err);
+      console.warn('Failed to load products from API, using built-in catalog:', err);
       setProducts(fallbackProducts);
       setError('Using offline data');
     } finally {
@@ -251,60 +167,29 @@ export function useProducts() {
   return { products, loading, error, refetch: loadProducts };
 }
 
-// Hook for donations
-export function useDonations() {
-  const [donations, setDonations] = useState<Donation[]>([]);
+// Hook for site settings (currently just the donate button's Cash App tag)
+export function useSiteSettings() {
+  const [settings, setSettings] = useState<SiteSettings>(fallbackSettings);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const loadDonations = async () => {
+  const loadSettings = async () => {
     try {
       setLoading(true);
-      const data = await api.getDonations();
-      setDonations(data);
-      setError(null);
+      const data = await api.getSettings();
+      setSettings({ ...fallbackSettings, ...data });
     } catch (err) {
-      console.warn('Failed to load donations from API:', err);
-      setDonations([]);
-      setError('No donation data available');
+      console.warn('Failed to load settings from API, using fallback data:', err);
+      setSettings(fallbackSettings);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDonations();
+    loadSettings();
   }, []);
 
-  return { donations, loading, error, refetch: loadDonations };
-}
-
-// Hook for photos
-export function usePhotos() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadPhotos = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getPhotos();
-      setPhotos(data);
-      setError(null);
-    } catch (err) {
-      console.warn('Failed to load photos from API:', err);
-      setPhotos([]);
-      setError('No photo data available');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPhotos();
-  }, []);
-
-  return { photos, loading, error, refetch: loadPhotos };
+  return { settings, loading, refetch: loadSettings };
 }
 
 // Combined hook for all data
@@ -312,26 +197,22 @@ export function useSiteData() {
   const shows = useShows();
   const videos = useVideos();
   const products = useProducts();
-  const donations = useDonations();
-  const photos = usePhotos();
+  const settings = useSiteSettings();
 
-  const loading = shows.loading || videos.loading || products.loading || donations.loading || photos.loading;
-  const hasError = !!shows.error || !!videos.error || !!products.error || !!donations.error || !!photos.error;
+  const loading = shows.loading || products.loading || settings.loading;
+  const hasError = !!shows.error || !!products.error;
 
   return {
     shows: shows.shows,
     videos: videos.videos,
     products: products.products,
-    donations: donations.donations,
-    photos: photos.photos,
+    settings: settings.settings,
     loading,
     hasError,
     refetch: () => {
       shows.refetch();
-      videos.refetch();
       products.refetch();
-      donations.refetch();
-      photos.refetch();
+      settings.refetch();
     }
   };
 }

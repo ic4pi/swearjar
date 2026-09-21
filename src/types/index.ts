@@ -8,8 +8,16 @@ export interface Product {
   /** For apparel: which shop section it belongs to. Not used for accessories. */
   series?: 'activism' | 'funny';
   variants: string[];
-  sales?: number;
-  merchize_sku?: string;
+}
+
+/** One product as read from the Merchize catalog (GET /api/admin/merchize/products). */
+export interface MerchizeCatalogProduct {
+  id: string;
+  title: string;
+  image: string;
+  labels: string[];
+  sizes: string[];
+  skus: Record<string, string>;
 }
 
 export interface ShippingInfo {
@@ -41,25 +49,8 @@ export interface Video {
   embedUrl?: string;
 }
 
-export interface AdminState {
-  isAuthenticated: boolean;
-  username: string;
-  password: string;
-}
-
-export interface SiteConfig {
-  shows: Show[];
-  videos: Video[];
-  products: Product[];
-  donations: Donation[];
-}
-
-export interface Donation {
-  id: string;
-  amount: number;
-  date: string;
-  donor?: string;
-  message?: string;
+export interface SiteSettings {
+  cashAppTag: string;
 }
 
 export interface CartItem {

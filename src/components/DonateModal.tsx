@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cashAppTag } from '@/data/siteData';
+import { useSiteSettings } from '@/hooks/useSiteData';
 
 interface DonateModalProps {
   isOpen: boolean;
@@ -13,6 +13,9 @@ interface DonateModalProps {
 }
 
 export function DonateModal({ isOpen, onClose }: DonateModalProps) {
+  const { settings } = useSiteSettings();
+  const cashAppTag = settings.cashAppTag;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-card border-border">
