@@ -139,6 +139,37 @@ db.serialize(() => {
         '2XL': 'MWZHVN000000AA05', '3XL': 'MWZHVN000000AA06', '4XL': 'MWZHVN000000AA07', '5XL': 'MWZHVN000000AA08',
       },
     },
+    // Pulled from the "Smart Peoples" collection in the shared Merchize
+    // account (Merchize product ids 6aadda6ce0acc7c2b004f022 and
+    // 6aadba87bea1cd6d573856e0).
+    {
+      id: 'merchize-6aadda6ce0acc7c2b004f022',
+      name: 'All-over Print Hoodie (Lightweight)',
+      description: 'Lightweight all-over print hoodie design.',
+      price: 40,
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadda6ce0acc7442a04f02a/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_dc694d11-0341-4524-a591-c10ecd2aa4fe/front-name:Front-QQ5r8I1WG/thumb.jpg',
+      category: 'apparel',
+      series: 'smart-people',
+      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+      merchize_sku: {
+        S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
+        '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
+      },
+    },
+    {
+      id: 'merchize-6aadba87bea1cd6d573856e0',
+      name: 'Tourettes Awareness Hoodie (Lightweight)',
+      description: 'Lightweight hoodie featuring the Tourette\'s Awareness design.',
+      price: 40,
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadba87bea1cd5ed93856e8/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_90db55b3-16de-4f2c-9553-62816054634a/front-name:Front-aNHaEugAF/thumb.jpg',
+      category: 'apparel',
+      series: 'smart-people',
+      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+      merchize_sku: {
+        S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
+        '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
+      },
+    },
   ];
   for (const p of merchizeSeedProducts) {
     db.run(

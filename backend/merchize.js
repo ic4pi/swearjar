@@ -28,9 +28,10 @@ const AUTH_STYLES = [
   (key) => ({ 'X-API-Key': key }),
 ];
 
-// Only a 401/403 moves to the next credential/header combo - any other
-// failure (400, 404, network, 5xx) is the real answer and is thrown
-// immediately rather than retried under a style that wouldn't fix it.
+// Every credential/header combo is tried before giving up - a transient
+// gateway error on one combo (observed in practice from this account's
+// product service) isn't a reliable enough signal to skip the combo that
+// would have actually worked.
 async function request(method, path, { params, data } = {}) {
   const root = base();
   if (!root) throw new Error('Merchize is not configured (MERCHIZE_BASE_URL)');
@@ -41,11 +42,9 @@ async function request(method, path, { params, data } = {}) {
   for (const key of keys) {
     for (const headers of AUTH_STYLES) {
       try {
-        return await axios.request({ method, url: path, baseURL: root, params, data, headers });
+        return await axios.request({ method, url: path, baseURL: root, params, data, headers: headers(key) });
       } catch (err) {
         lastError = err;
-        const status = err.response?.status;
-        if (status !== 401 && status !== 403) throw err;
       }
     }
   }
@@ -71,14 +70,15 @@ async function getOrderTracking({ code, externalNumber, identifier } = {}) {
 /* ── READING THE MERCHIZE CATALOG ───────────────────────────────────────
    Pulling products Merchize already holds, filtered to one category, so a
    garment doesn't have to be re-typed here after it's been set up there.
-   Their exact product path isn't documented publicly, so the candidates
-   below are tried in order and the first that answers is used. Set
+   /product/products is confirmed working against this account (returns
+   {success, data:{products:[...]}}); the rest are fallback guesses in case
+   a different store generation answers differently. Set
    MERCHIZE_PRODUCTS_PATH to pin one explicitly and skip the probing.
 ── */
 const PRODUCT_ENDPOINTS = [
+  { path: '/product/products', method: 'get' },
   { path: '/product/external/products', method: 'get' },
   { path: '/catalog/external/products', method: 'get' },
-  { path: '/product', method: 'get' },
   { path: '/products', method: 'get' },
   { path: '/product/search', method: 'post' },
 ];
@@ -194,6 +194,27 @@ function shapeMerchizeProduct(raw) {
   };
 }
 
+// The product list doesn't carry per-size SKUs on this account - only the
+// product detail's /variants sub-resource does - so it's fetched separately
+// per product, and only for the (usually small) filtered set actually
+// wanted rather than the whole catalog.
+async function fetchVariantSkus(id) {
+  try {
+    const res = await request('get', `/product/products/${id}/variants`);
+    const list = res.data?.data?.variants || res.data?.variants || [];
+    const skus = {};
+    for (const v of list) {
+      const sku = firstString(v, ['sku', 'SKU', 'variant_sku', 'code']);
+      const size = firstString(v, ['title', 'size', 'Size', 'name']).toUpperCase();
+      if (sku && size) skus[size] = sku;
+    }
+    return skus;
+  } catch (err) {
+    console.warn('Merchize variant lookup failed for', id, err.response?.status || err.message);
+    return {};
+  }
+}
+
 // Fetch the catalog, optionally narrowed to products carrying `label` as a
 // collection/tag/category value (matched case-insensitively).
 async function listMerchizeProducts({ label = '' } = {}) {
@@ -220,6 +241,12 @@ async function listMerchizeProducts({ label = '' } = {}) {
       const wanted = label
         ? all.filter((p) => p.labels.some((l) => l.toLowerCase() === label.toLowerCase()))
         : all;
+
+      for (const p of wanted) {
+        if (Object.keys(p.skus).length) continue; // this endpoint shape already had them
+        p.skus = await fetchVariantSkus(p.id);
+        p.sizes = Object.keys(p.skus);
+      }
 
       return {
         ok: true,

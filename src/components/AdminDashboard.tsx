@@ -87,7 +87,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [merchizeLabel, setMerchizeLabel] = useState('Smart People');
+  const [merchizeLabel, setMerchizeLabel] = useState('Smart Peoples');
   const [merchizeResults, setMerchizeResults] = useState<MerchizeCatalogProduct[]>([]);
   const [merchizeSelected, setMerchizeSelected] = useState<Set<string>>(new Set());
   const [merchizeStatus, setMerchizeStatus] = useState('');
