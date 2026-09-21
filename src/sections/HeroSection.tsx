@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Volume2, VolumeX, ExternalLink, ChevronDown, Calendar, MapPin } from 'lucide-react';
+import { Play, ExternalLink, ChevronDown, Calendar, MapPin } from 'lucide-react';
 import { useVideos, useShows } from '@/hooks/useSiteData';
 import { getNextThreeShows } from '@/utils/showUtils';
 
@@ -11,14 +11,8 @@ gsap.registerPlugin(ScrollTrigger);
 // The full list lives further down the page in "Watch the Set".
 const HERO_MAX_VIDEOS = 3;
 
-// The source clips are square, so a 16:9 frame leaves dead space on each
-// side - which is where YouTube draws its channel avatar/branding. A square
-// video fills 9/16 (56.25%) of the width, leaving (100 - 56.25) / 2 = 21.875%
-// per side; sit just inside that so the bars never clip actual footage.
-const PILLARBOX_BAR_PERCENT = 21.7;
-
 // Pulls the video ID out of a "/embed/<id>" YouTube URL for building a
-// player URL with our own autoplay/loop/mute params.
+// player URL when someone actually presses play.
 function getYouTubeEmbedId(embedUrl: string): string | null {
   const match = embedUrl.match(/\/embed\/([^/?]+)/);
   return match ? match[1] : null;
@@ -28,8 +22,12 @@ export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const videoGalleryRef = useRef<HTMLDivElement>(null);
   const blurbRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  // Nothing autoplays: a live YouTube iframe used as an ambient background
+  // shows its own title/controls/logo no matter what params are passed -
+  // controls=0 isn't reliably honored on mobile. The hero shows a clean,
+  // full-bleed cropped poster image until someone actually presses play,
+  // at which point YouTube's own player (and its chrome) is expected.
+  const [isPlaying, setIsPlaying] = useState(false);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const { videos } = useVideos();
   const { shows } = useShows();
@@ -39,31 +37,11 @@ export function HeroSection() {
   const safeIndex = heroVideos.length > 0 ? Math.min(activeVideoIndex, heroVideos.length - 1) : 0;
   const heroVideo = heroVideos[safeIndex];
   const heroVideoId = heroVideo?.embedUrl ? getYouTubeEmbedId(heroVideo.embedUrl) : null;
-  const heroEmbedSrc = heroVideoId
-    ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&mute=1&loop=1&playlist=${heroVideoId}&controls=0&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`
-    : null;
+  const heroEmbedSrc = heroVideoId ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&playsinline=1` : null;
 
-  const postPlayerCommand = (func: 'mute' | 'unMute') => {
-    iframeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: [] }),
-      '*'
-    );
-  };
-
-  const toggleSound = () => {
-    setSoundEnabled((prev) => {
-      postPlayerCommand(prev ? 'mute' : 'unMute');
-      return !prev;
-    });
-  };
-
-  // Every video loads muted (browser autoplay policy); if sound was already
-  // on, re-apply unmute once the newly selected video's player is ready.
-  // Matters here since switching videos in the playlist remounts the iframe.
-  const handlePlayerLoad = () => {
-    if (soundEnabled) {
-      setTimeout(() => postPlayerCommand('unMute'), 300);
-    }
+  const selectVideo = (index: number) => {
+    setActiveVideoIndex(index);
+    setIsPlaying(false);
   };
 
   useEffect(() => {
@@ -144,45 +122,37 @@ export function HeroSection() {
           className="relative w-full max-w-5xl mb-4"
         >
           <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 bg-black">
-            {heroEmbedSrc ? (
-              <>
-                <iframe
-                  ref={iframeRef}
-                  key={heroVideoId}
-                  src={heroEmbedSrc}
-                  title={heroVideo?.title || 'Stand-up clip'}
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  allow="autoplay; encrypted-media"
-                  frameBorder="0"
-                  onLoad={handlePlayerLoad}
-                />
-                {/* Mask the empty sides of the frame so YouTube's channel
-                    avatar can't show through next to a square video. */}
-                <div
-                  className="absolute inset-y-0 left-0 z-10 bg-black pointer-events-none"
-                  style={{ width: `${PILLARBOX_BAR_PERCENT}%` }}
-                />
-                <div
-                  className="absolute inset-y-0 right-0 z-10 bg-black pointer-events-none"
-                  style={{ width: `${PILLARBOX_BAR_PERCENT}%` }}
-                />
-              </>
-            ) : (
-              <img
-                src={heroVideo?.thumbnail || '/video_reel.jpg'}
-                alt={heroVideo?.title || 'Stand-up clip'}
-                className="absolute inset-0 w-full h-full object-cover"
+            {isPlaying && heroEmbedSrc ? (
+              <iframe
+                key={heroVideoId}
+                src={heroEmbedSrc}
+                title={heroVideo?.title || 'Stand-up clip'}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                frameBorder="0"
               />
+            ) : (
+              <>
+                <img
+                  src={heroVideo?.thumbnail || '/video_reel.jpg'}
+                  alt={heroVideo?.title || 'Stand-up clip'}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                {heroVideoId && (
+                  <button
+                    onClick={() => setIsPlaying(true)}
+                    className="absolute inset-0 flex items-center justify-center group"
+                    aria-label="Play video"
+                  >
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                    <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-primary/90 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-primary">
+                      <Play className="w-8 h-8 lg:w-10 lg:h-10 text-primary-foreground ml-1" fill="currentColor" />
+                    </div>
+                  </button>
+                )}
+              </>
             )}
-
-            {/* Sound Toggle Button */}
-            <button
-              onClick={toggleSound}
-              className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white transition-colors"
-              aria-label={soundEnabled ? 'Mute video' : 'Unmute video'}
-            >
-              {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </button>
           </div>
 
           {/* Small playlist - hero stays capped at HERO_MAX_VIDEOS; the full
@@ -192,7 +162,7 @@ export function HeroSection() {
               {heroVideos.map((video, index) => (
                 <button
                   key={video.id}
-                  onClick={() => setActiveVideoIndex(index)}
+                  onClick={() => selectVideo(index)}
                   className={`shrink-0 w-24 sm:w-28 text-left rounded-lg overflow-hidden border-2 transition-colors ${
                     index === safeIndex ? 'border-primary' : 'border-transparent hover:border-border'
                   }`}
