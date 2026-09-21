@@ -1,6 +1,11 @@
 const Stripe = require('stripe');
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+// Stripe's constructor throws synchronously on a missing/empty key rather
+// than failing the specific call that needed it — at module load time that
+// takes the whole function down (every route that requires this file)
+// before a handler even gets a chance to respond gracefully. Guard it here
+// once so a missing STRIPE_SECRET_KEY degrades to an empty catalog instead.
+const stripe = process.env.STRIPE_SECRET_KEY ? Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 /* ── DYNAMIC CATALOG ────────────────────────────────────────────────────
    Products added or edited through /admin are stored as Stripe Products
@@ -47,6 +52,7 @@ function shape(p) {
 }
 
 async function listCatalog() {
+  if (!stripe) return [];
   const page = await stripe.products.list({
     limit: 100,
     active: true,
