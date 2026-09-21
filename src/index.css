@@ -42,6 +42,16 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
+    /* One maximalist background art piece behind the whole page, tinted
+       down and fixed - sections stack translucently on top of it instead
+       of each carrying its own copy. */
+    background-image:
+      linear-gradient(hsl(var(--background) / 0.88), hsl(var(--background) / 0.88)),
+      url('/tic-happens-watermark.png');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 }
 

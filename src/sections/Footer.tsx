@@ -11,7 +11,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-background border-t border-border py-8 z-70">
+    <footer className="border-t border-border py-8 z-70">
       <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Links */}
