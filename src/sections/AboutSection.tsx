@@ -80,11 +80,11 @@ export function AboutSection({ onDonateClick }: AboutSectionProps) {
         {/* Layer 2 - Semi-transparent black background */}
         <div className="absolute inset-0 bg-card/10 rounded-lg" />
         
-        {/* Line Art on top of Layer 2 */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-60"
+        {/* Watermark behind the shows/about cards */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.12]"
           style={{
-            backgroundImage: 'url(/line-art-background.PNG)',
+            backgroundImage: 'url(/tic-happens-watermark.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
