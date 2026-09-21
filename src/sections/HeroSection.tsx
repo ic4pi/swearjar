@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Play, ExternalLink, ChevronDown, Calendar, MapPin } from 'lucide-react';
 import { useVideos, useShows } from '@/hooks/useSiteData';
 import { getNextThreeShows } from '@/utils/showUtils';
+import { getVideoSource } from '@/utils/videoUtils';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,22 +12,16 @@ gsap.registerPlugin(ScrollTrigger);
 // The full list lives further down the page in "Watch the Set".
 const HERO_MAX_VIDEOS = 3;
 
-// Pulls the video ID out of a "/embed/<id>" YouTube URL for building a
-// player URL when someone actually presses play.
-function getYouTubeEmbedId(embedUrl: string): string | null {
-  const match = embedUrl.match(/\/embed\/([^/?]+)/);
-  return match ? match[1] : null;
-}
-
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const videoGalleryRef = useRef<HTMLDivElement>(null);
   const blurbRef = useRef<HTMLDivElement>(null);
-  // Nothing autoplays: a live YouTube iframe used as an ambient background
-  // shows its own title/controls/logo no matter what params are passed -
-  // controls=0 isn't reliably honored on mobile. The hero shows a clean,
-  // full-bleed cropped poster image until someone actually presses play,
-  // at which point YouTube's own player (and its chrome) is expected.
+  // A YouTube iframe used as an ambient background shows its own title/
+  // controls/logo no matter what params are passed - controls=0 isn't
+  // reliably honored on mobile - so a YouTube video only plays once
+  // someone actually presses play, and its own chrome is then expected.
+  // A self-hosted file has no such problem and autoplays muted+looped
+  // straight away, same as any other ambient background video.
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const { videos } = useVideos();
@@ -36,8 +31,8 @@ export function HeroSection() {
   const heroVideos = videos.slice(0, HERO_MAX_VIDEOS);
   const safeIndex = heroVideos.length > 0 ? Math.min(activeVideoIndex, heroVideos.length - 1) : 0;
   const heroVideo = heroVideos[safeIndex];
-  const heroVideoId = heroVideo?.embedUrl ? getYouTubeEmbedId(heroVideo.embedUrl) : null;
-  const heroEmbedSrc = heroVideoId ? `https://www.youtube.com/embed/${heroVideoId}?autoplay=1&playsinline=1` : null;
+  const heroSource = getVideoSource(heroVideo);
+  const heroEmbedSrc = heroSource.kind === 'youtube' ? `https://www.youtube.com/embed/${heroSource.id}?autoplay=1&playsinline=1` : null;
 
   const selectVideo = (index: number) => {
     setActiveVideoIndex(index);
@@ -132,9 +127,21 @@ export function HeroSection() {
           className="relative w-full max-w-5xl mb-4"
         >
           <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 bg-black">
-            {isPlaying && heroEmbedSrc ? (
+            {heroSource.kind === 'file' ? (
+              <video
+                key={heroSource.url}
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={heroVideo?.thumbnail}
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={heroSource.url} type="video/mp4" />
+              </video>
+            ) : isPlaying && heroEmbedSrc ? (
               <iframe
-                key={heroVideoId}
+                key={heroSource.kind === 'youtube' ? heroSource.id : undefined}
                 src={heroEmbedSrc}
                 title={heroVideo?.title || 'Stand-up clip'}
                 className="absolute inset-0 w-full h-full"
@@ -149,7 +156,7 @@ export function HeroSection() {
                   alt={heroVideo?.title || 'Stand-up clip'}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                {heroVideoId && (
+                {heroSource.kind === 'youtube' && (
                   <button
                     onClick={() => setIsPlaying(true)}
                     className="absolute inset-0 flex items-center justify-center group"

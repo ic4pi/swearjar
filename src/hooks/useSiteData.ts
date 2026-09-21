@@ -31,14 +31,16 @@ const fallbackShows: Show[] = [
   }
 ];
 
-// Shown until /api/videos answers, and again if it fails.
+// Shown until /api/videos answers, and again if it fails. Self-hosted (no
+// embedUrl, url points at a direct video file) rather than YouTube - see
+// getVideoSource() in HeroSection.tsx / VideoSection.tsx for how the two
+// are told apart.
 const fallbackVideos: Video[] = [
   {
     id: '1',
-    title: 'Stand-Up Clip',
-    thumbnail: 'https://img.youtube.com/vi/NYb64OG_ksg/maxresdefault.jpg',
-    url: 'https://youtu.be/NYb64OG_ksg',
-    embedUrl: 'https://www.youtube.com/embed/NYb64OG_ksg'
+    title: 'Kill Tony',
+    thumbnail: '/video/zach-kill-tony-poster.jpg',
+    url: '/video/zach-kill-tony.mp4',
   }
 ];
 

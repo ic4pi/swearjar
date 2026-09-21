@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '@/components/ui/button';
 import { Play, X, Youtube } from 'lucide-react';
 import { useVideos } from '@/hooks/useSiteData';
+import { getVideoSource } from '@/utils/videoUtils';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -75,6 +76,7 @@ export function VideoSection() {
   }, []);
 
   const featuredVideo = videos[safeIndex];
+  const featuredSource = getVideoSource(featuredVideo);
 
   return (
     <section
@@ -147,6 +149,25 @@ export function VideoSection() {
                 </div>
               </div>
             </>
+          ) : featuredSource.kind === 'file' ? (
+            <div className="relative w-full h-full">
+              <video
+                key={featuredSource.url}
+                autoPlay
+                controls
+                playsInline
+                poster={featuredVideo.thumbnail}
+                className="w-full h-full"
+              >
+                <source src={featuredSource.url} type="video/mp4" />
+              </video>
+              <button
+                onClick={() => setIsPlaying(false)}
+                className="absolute top-4 right-4 w-10 h-10 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-black transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           ) : (
             <div className="relative w-full h-full">
               <iframe
