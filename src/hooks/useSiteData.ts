@@ -37,99 +37,37 @@ const fallbackVideos: Video[] = [
 ];
 
 const fallbackProducts: Product[] = [
-  // Activism series - Tourette's awareness designs
+  // Activism series - Tourette's awareness design, sourced from the shared Merchize catalog.
   {
-    id: '1',
-    name: 'Tic & Talk Hoodie',
-    description: 'Start conversations. Spread awareness. Stay comfortable.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '2',
-    name: '1 in 100 Hoodie',
-    description: '1 in 100 school-aged kids have Tourette\'s. Wear the stat, start the conversation.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '3',
-    name: 'Warrior Hoodie',
-    description: 'For the fighters. For the advocates. For everyone.',
-    price: 48,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '4',
-    name: 'Awareness Ambassador Hoodie',
-    description: 'Be an ambassador for understanding. Wear it proudly.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'activism',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '9',
+    id: 'merchize-6aadba87bea1cd6d573856e0',
     name: "Tourette's Awareness Hoodie",
-    description: "Design by Smart_Ppl. Wear the awareness, start the conversation.",
-    price: 45,
-    image: '/product_sweater_1.jpg',
+    description: "Lightweight hoodie featuring the Tourette's Awareness design.",
+    price: 40,
+    image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadba87bea1cd5ed93856e8/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_90db55b3-16de-4f2c-9553-62816054634a/front-name:Front-aNHaEugAF/thumb.jpg',
     category: 'apparel',
     series: 'activism',
-    variants: ['Unisex Hoodie']
+    variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+    merchize_sku: JSON.stringify({
+      S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
+      '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
+    }),
   },
-  // Funny series - no category, just laughs
+  // Funny series - no category, just laughs. Also sourced from the shared Merchize catalog.
   {
-    id: '5',
-    name: 'Laugh Out Loud Hoodie',
-    description: 'No cause, no message. Just funny.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
+    id: 'merchize-6aadda6ce0acc7c2b004f022',
+    name: 'I Heart White Collar Crime Hoodie',
+    description: 'Lightweight hoodie featuring the "I Heart White Collar Crime" design.',
+    price: 40,
+    image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadda6ce0acc7442a04f02a/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_dc694d11-0341-4524-a591-c10ecd2aa4fe/front-name:Front-QQ5r8I1WG/thumb.jpg',
     category: 'apparel',
     series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
+    variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
+    merchize_sku: JSON.stringify({
+      S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
+      '2XL': 'LWHDVN000000AA05', '3XL': 'LWHDVN000000AA06', '4XL': 'LWHDVN000000AA07', '5XL': 'LWHDVN000000AA08',
+    }),
   },
-  {
-    id: '6',
-    name: 'Stage Ready Hoodie',
-    description: 'Comfortable enough for the green room, funny enough for the front row.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie']
-  },
-  {
-    id: '7',
-    name: 'Comedy Club Hoodie',
-    description: 'For anyone who thinks they could probably do five minutes too.',
-    price: 45,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie', 'Unisex T-Shirt']
-  },
-  {
-    id: '8',
-    name: 'Zachariah Tippett Original Hoodie',
-    description: 'The original. The classic. The statement.',
-    price: 48,
-    image: '/product_sweater_1.jpg',
-    category: 'apparel',
-    series: 'funny',
-    variants: ['Unisex Hoodie']
-  },
-  // Accessories
+  // Accessories - single placeholder until real accessory products are added.
   {
     id: 'a1',
     name: 'Sticker Pack',
@@ -139,32 +77,6 @@ const fallbackProducts: Product[] = [
     category: 'accessories',
     variants: ['Standard Pack']
   },
-  {
-    id: 'a2',
-    name: 'Morning Mug',
-    description: 'Start your day with a smile and a cause. 11oz ceramic.',
-    price: 16,
-    image: '/shop_mug.jpg',
-    category: 'accessories',
-    variants: ['11oz Mug']
-  },
-  {
-    id: 'a3',
-    name: 'Enamel Pin Set',
-    description: 'Wear your support. Collectible quality pins.',
-    price: 12,
-    image: '/product_pin_1.jpg',
-    category: 'accessories',
-    variants: ['Set of 3']
-  },
-  {
-    id: 'a4',
-    name: 'Tote Bag',
-    description: 'Carry the message. Durable canvas, bold design.',
-    price: 22,
-    image: '/product_tote_1.jpg',
-    category: 'accessories',
-    variants: ['Standard Tote']  }
 ];
 
 // Hook for shows

@@ -6,7 +6,7 @@ export interface Product {
   image: string;
   category: 'apparel' | 'accessories';
   /** For apparel: which shop section it belongs to. Not used for accessories. */
-  series?: 'activism' | 'funny' | 'smart-people';
+  series?: 'activism' | 'funny';
   variants: string[];
   sales?: number;
   merchize_sku?: string;

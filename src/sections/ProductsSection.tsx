@@ -118,12 +118,10 @@ export function ProductsSection() {
   const accessoriesRef = useRef<HTMLDivElement>(null);
   const { products, loading } = useProducts();
 
-  // Apparel splits by series - Tourette's activism designs, no-category funny
-  // designs, and the "Smart People" designs imported from Merchize.
-  // Accessories aren't part of any series.
+  // Apparel splits into two sections by series - Tourette's activism designs
+  // and no-category funny designs. Accessories aren't part of either series.
   const activismHoodies = products.filter(p => p.category === 'apparel' && p.series === 'activism');
   const funnyHoodies = products.filter(p => p.category === 'apparel' && p.series === 'funny');
-  const smartPeopleHoodies = products.filter(p => p.category === 'apparel' && p.series === 'smart-people');
   const accessoryProducts = products.filter(p => p.category === 'accessories');
 
   useEffect(() => {
@@ -232,29 +230,6 @@ export function ProductsSection() {
             ))}
           </div>
         </div>
-
-        {/* Smart People Hoodies Section - imported from the Merchize catalog */}
-        {smartPeopleHoodies.length > 0 && (
-          <div>
-            <div className="text-center mb-12 lg:mb-16">
-              <h2 className="font-display font-black text-4xl lg:text-6xl tracking-tight mb-4">
-                SMART <span className="text-primary">PEOPLE</span>
-              </h2>
-              <div className="animate-item h-1 w-64 mx-auto bg-primary rounded-full" />
-              <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-                Designs for the smart people in the room.
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {smartPeopleHoodies.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Accessories Section */}
         <div ref={accessoriesRef}>

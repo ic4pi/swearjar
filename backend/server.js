@@ -111,45 +111,18 @@ db.serialize(() => {
   // safe to leave in place across every future deploy/restart, and won't
   // clobber edits made afterward from the admin dashboard.
   const merchizeSeedProducts = [
-    {
-      id: 'white-collar-crime-hoodie',
-      name: 'I Heart White Collar Crime (Midweight)',
-      description: 'Midweight hoodie featuring the "I Heart White Collar Crime" design.',
-      price: 47,
-      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/9kcjr3ho/variants/6a9b69fdbdd18a8571cf6341/variant-sku/MWHDVN000000AA01/attributes-size:s,background:qdrvtf9_mockup-backgrounds_aa8048d3-ea20-4b8c-aa92-7b01f16a7d48/front-name:Front-fLVy4ClOB/thumb.jpg',
-      category: 'apparel',
-      series: 'funny',
-      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
-      merchize_sku: {
-        S: 'MWHDVN000000AA01', M: 'MWHDVN000000AA02', L: 'MWHDVN000000AA03', XL: 'MWHDVN000000AA04',
-        '2XL': 'MWHDVN000000AA05', '3XL': 'MWHDVN000000AA06', '4XL': 'MWHDVN000000AA07', '5XL': 'MWHDVN000000AA08',
-      },
-    },
-    {
-      id: 'white-collar-crime-zip-hoodie',
-      name: 'I Heart White Collar Crime Zip-Hoodie (Midweight)',
-      description: 'Midweight zip-up hoodie featuring the "I Heart White Collar Crime" design.',
-      price: 48,
-      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/9kcjr3ho/variants/6a9b739c221aaf8be9c09219/variant-sku/MWZHVN000000AA01/attributes-size:s,background:qdrvtf9_mockup-backgrounds_a1473146-abc2-41d5-8828-2588b6c158b2/front-name:Front-zyF50cnqx/thumb.jpg',
-      category: 'apparel',
-      series: 'funny',
-      variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
-      merchize_sku: {
-        S: 'MWZHVN000000AA01', M: 'MWZHVN000000AA02', L: 'MWZHVN000000AA03', XL: 'MWZHVN000000AA04',
-        '2XL': 'MWZHVN000000AA05', '3XL': 'MWZHVN000000AA06', '4XL': 'MWZHVN000000AA07', '5XL': 'MWZHVN000000AA08',
-      },
-    },
     // Pulled from the "Smart Peoples" collection in the shared Merchize
     // account (Merchize product ids 6aadda6ce0acc7c2b004f022 and
-    // 6aadba87bea1cd6d573856e0).
+    // 6aadba87bea1cd6d573856e0), placed into the site's existing activism
+    // and funny hoodie sections rather than a separate one.
     {
-      id: 'merchize-6aadda6ce0acc7c2b004f022',
-      name: 'All-over Print Hoodie (Lightweight)',
-      description: 'Lightweight all-over print hoodie design.',
+      id: 'merchize-6aadba87bea1cd6d573856e0',
+      name: "Tourette's Awareness Hoodie",
+      description: "Lightweight hoodie featuring the Tourette's Awareness design.",
       price: 40,
-      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadda6ce0acc7442a04f02a/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_dc694d11-0341-4524-a591-c10ecd2aa4fe/front-name:Front-QQ5r8I1WG/thumb.jpg',
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadba87bea1cd5ed93856e8/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_90db55b3-16de-4f2c-9553-62816054634a/front-name:Front-aNHaEugAF/thumb.jpg',
       category: 'apparel',
-      series: 'smart-people',
+      series: 'activism',
       variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
       merchize_sku: {
         S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
@@ -157,13 +130,13 @@ db.serialize(() => {
       },
     },
     {
-      id: 'merchize-6aadba87bea1cd6d573856e0',
-      name: 'Tourettes Awareness Hoodie (Lightweight)',
-      description: 'Lightweight hoodie featuring the Tourette\'s Awareness design.',
+      id: 'merchize-6aadda6ce0acc7c2b004f022',
+      name: 'I Heart White Collar Crime Hoodie',
+      description: 'Lightweight hoodie featuring the "I Heart White Collar Crime" design.',
       price: 40,
-      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadba87bea1cd5ed93856e8/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_90db55b3-16de-4f2c-9553-62816054634a/front-name:Front-aNHaEugAF/thumb.jpg',
+      image: 'https://d2dytk4tvgwhb4.cloudfront.net/v2/apnlgyzx/variants/6aadda6ce0acc7442a04f02a/variant-sku/LWHDVN000000AA01/attributes-size:s,background:oxncwpw_mockup-backgrounds_dc694d11-0341-4524-a591-c10ecd2aa4fe/front-name:Front-QQ5r8I1WG/thumb.jpg',
       category: 'apparel',
-      series: 'smart-people',
+      series: 'funny',
       variants: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'],
       merchize_sku: {
         S: 'LWHDVN000000AA01', M: 'LWHDVN000000AA02', L: 'LWHDVN000000AA03', XL: 'LWHDVN000000AA04',
@@ -484,7 +457,7 @@ app.post('/api/admin/merchize/import', verifyToken, (req, res) => {
         item.description || '',
         Number(item.price ?? price) || 0,
         item.image || '',
-        series || 'smart-people',
+        series || null,
         JSON.stringify(variants),
         JSON.stringify(item.skus || {}),
       ],

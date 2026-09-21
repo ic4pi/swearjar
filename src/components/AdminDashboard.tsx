@@ -422,11 +422,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ items, series: 'smart-people', price: 45 }),
+        body: JSON.stringify({ items, price: 45 }),
       });
       const data = await response.json();
       if (response.ok) {
-        setMerchizeStatus(`Imported ${data.imported} product(s) into Smart People.`);
+        setMerchizeStatus(`Imported ${data.imported} product(s). Set each one's series below to put it on the shop page.`);
         setMerchizeResults([]);
         setMerchizeSelected(new Set());
         await loadData();
@@ -768,13 +768,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               <h4 className="font-bold">Import from Merchize</h4>
               <p className="text-sm text-muted-foreground">
                 Pull designs already set up in the shared Merchize account by category. Imported
-                products land in the "Smart People" shop section.
+                products need a series set below (Activism/Funny) before they show on the shop page.
               </p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   value={merchizeLabel}
                   onChange={(e) => setMerchizeLabel(e.target.value)}
-                  placeholder="Merchize category (e.g. Smart People)"
+                  placeholder="Merchize category (e.g. Smart Peoples)"
                   className="sm:flex-1"
                 />
                 <Button onClick={handleFetchMerchizeCatalog} disabled={merchizeBusy || !merchizeLabel} size="sm">
@@ -854,7 +854,6 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                     <option value="">No series (accessories)</option>
                     <option value="activism">Activism (Tourette's)</option>
                     <option value="funny">Funny (no category)</option>
-                    <option value="smart-people">Smart People</option>
                   </select>
                   <div className="flex gap-2">
                     <button
