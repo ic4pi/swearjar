@@ -46,7 +46,7 @@ export const api = {
 // Admin actions all go through the single /api/admin?action=... endpoint
 // (see api/admin.js), authenticated with the Bearer token issued at login.
 export const adminApi = {
-  async login(password: string): Promise<{ token: string; expiresInHours: number }> {
+  async login(password: string): Promise<{ token: string; expiresInHours: number; mustChangePassword?: boolean }> {
     const response = await fetch(`${API_BASE}/admin?action=login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

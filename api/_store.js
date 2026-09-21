@@ -20,15 +20,26 @@ const { put, list } = require('@vercel/blob');
 
 const STORE_PATH = 'store/site-data.json';
 
+// `auth` is deliberately separate from `settings`: api/settings.js returns
+// `settings` verbatim to anyone (it's the public donate-cashtag read), so
+// the day-to-day admin password must never live in that object or it would
+// leak over the public endpoint.
 const DEFAULTS = {
   shows: [],
   videos: [],
   photos: [],
   settings: { cashAppTag: '$TourettesInc' },
+  auth: { password: 'TOURETTES2026', isDefault: true },
 };
 
 function defaults() {
-  return { shows: [], videos: [], photos: [], settings: { ...DEFAULTS.settings } };
+  return {
+    shows: [],
+    videos: [],
+    photos: [],
+    settings: { ...DEFAULTS.settings },
+    auth: { ...DEFAULTS.auth },
+  };
 }
 
 function configured() {
@@ -52,6 +63,7 @@ async function readStore() {
       videos: Array.isArray(data.videos) ? data.videos : [],
       photos: Array.isArray(data.photos) ? data.photos : [],
       settings: { ...DEFAULTS.settings, ...(data && typeof data.settings === 'object' ? data.settings : {}) },
+      auth: { ...DEFAULTS.auth, ...(data && typeof data.auth === 'object' ? data.auth : {}) },
     };
   } catch (err) {
     console.error('site store read failed:', err.message);

@@ -52,6 +52,11 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [error, setError] = useState('');
   const [authToken, setAuthToken] = useState('');
   const [loginBusy, setLoginBusy] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordBusy, setPasswordBusy] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState('');
 
   // Admin data state
   const [shows, setShows] = useState<Show[]>([]);
@@ -97,9 +102,10 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     setLoginBusy(true);
     setError('');
     try {
-      const { token } = await adminApi.login(password);
+      const { token, mustChangePassword: mustChange } = await adminApi.login(password);
       setIsAuthenticated(true);
       setAuthToken(token);
+      setMustChangePassword(!!mustChange);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
@@ -111,7 +117,32 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     setIsAuthenticated(false);
     setPassword('');
     setAuthToken('');
+    setMustChangePassword(false);
     onClose();
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordStatus('');
+    if (newPassword.length < 8) {
+      setPasswordStatus('Password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus('Passwords don’t match.');
+      return;
+    }
+    setPasswordBusy(true);
+    try {
+      await adminApi.call(authToken, 'change-password', { newPassword });
+      setMustChangePassword(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordStatus('Password changed.');
+    } catch (err) {
+      setPasswordStatus(err instanceof Error ? err.message : 'Failed to change password');
+    } finally {
+      setPasswordBusy(false);
+    }
   };
 
   // ── Shows ──
@@ -430,7 +461,13 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="shows" className="pt-4">
+        {mustChangePassword && (
+          <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-sm">
+            You're signed in with the one-time default password. Go to <strong>Settings</strong> and set a new one.
+          </div>
+        )}
+
+        <Tabs defaultValue={mustChangePassword ? 'settings' : 'shows'} className="pt-4">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="shows">
               <Calendar className="w-4 h-4 mr-2" />
@@ -768,11 +805,43 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
               </Button>
             </div>
 
-            <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
-              <h4 className="font-bold mb-1">Admin password</h4>
-              <p className="text-sm text-muted-foreground">
-                Changed in Vercel: Settings → Environment Variables → ADMIN_PASSWORD, then redeploy.
-                There's no separate username — this password is the whole login.
+            <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3 max-w-md">
+              <h4 className="font-bold">Admin password</h4>
+              {mustChangePassword && (
+                <p className="text-sm text-destructive font-semibold">
+                  You're using the one-time default password — set a new one now.
+                </p>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat it"
+                  onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
+                />
+              </div>
+              {passwordStatus && <p className="text-sm text-muted-foreground">{passwordStatus}</p>}
+              <Button onClick={handleChangePassword} className="btn-primary" disabled={passwordBusy}>
+                <Save className="w-4 h-4 mr-2" />
+                {passwordBusy ? 'Saving...' : 'Change password'}
+              </Button>
+              <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+                There's a separate emergency override password too, set only in Vercel
+                (Settings → Environment Variables → ADMIN_PASSWORD) for whoever controls the
+                Vercel project — it always works even if this one is lost.
               </p>
             </div>
 
