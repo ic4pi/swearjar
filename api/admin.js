@@ -453,6 +453,26 @@ async function updateSettings(body) {
   return { settings: store.settings };
 }
 
+/* ── Auth ──
+   Two passwords, on purpose: ADMIN_PASSWORD (the Vercel env var) is a
+   break-glass override that always logs in, for whoever controls the
+   Vercel project. store.auth.password is the day-to-day login, changeable
+   from the Settings tab, starting at a one-time default the dashboard
+   nags you to change until you do. Neither is ever put on `settings` —
+   that object is returned as-is by the public /api/settings endpoint. */
+
+async function changePassword(body) {
+  const newPassword = String(body.newPassword || '');
+  if (newPassword.length < 8) {
+    return { error: 'Password must be at least 8 characters.' };
+  }
+  const store = await readStore();
+  store.auth.password = newPassword;
+  store.auth.isDefault = false;
+  await writeStore(store);
+  return { ok: true };
+}
+
 /* ── Handler ── */
 
 module.exports = async (req, res) => {
@@ -469,13 +489,20 @@ module.exports = async (req, res) => {
       return;
     }
     const supplied = (req.body && req.body.password) || '';
-    if (!supplied || !sameSecret(supplied, adminSecret())) {
+    const store = await readStore();
+    const matchesOverride = supplied && sameSecret(supplied, adminSecret());
+    const matchesCurrent = supplied && sameSecret(supplied, store.auth.password);
+    if (!matchesOverride && !matchesCurrent) {
       // Slow a guessing loop down a little without holding the function open.
       await new Promise((r) => setTimeout(r, 600));
       res.status(401).json({ error: 'Wrong password' });
       return;
     }
-    res.status(200).json({ token: issueToken(), expiresInHours: SESSION_HOURS });
+    res.status(200).json({
+      token: issueToken(),
+      expiresInHours: SESSION_HOURS,
+      mustChangePassword: matchesCurrent && store.auth.isDefault,
+    });
     return;
   }
 
@@ -513,6 +540,20 @@ module.exports = async (req, res) => {
         return;
       }
       const out = await updateSettings(req.body || {});
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'change-password') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await changePassword(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
       res.status(200).json(out);
       return;
     }
