@@ -50,12 +50,12 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
       }`}
     >
       <nav className="w-full px-6 lg:px-12 py-4 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo - dark artwork on transparent PNG needs a bar behind it to read on the dark page bg */}
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="shrink-0 opacity-90 hover:opacity-100 transition-opacity"
+          className="shrink-0 opacity-90 hover:opacity-100 transition-opacity bg-primary rounded-md px-3 py-1"
         >
-          <img src="/zachariah-tippett-logo.png" alt="Zachariah Tippett" className="h-16 lg:h-20 w-auto" />
+          <img src="/zachariah-tippett-logo.png" alt="Zachariah Tippett" className="h-14 lg:h-16 w-auto" />
         </button>
 
         {/* Desktop Navigation - Unorthodox style */}

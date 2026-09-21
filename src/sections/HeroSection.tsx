@@ -121,6 +121,13 @@ export function HeroSection() {
       {/* Main Content Container */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 lg:px-8 py-12 lg:py-16">
 
+        {/* Headline */}
+        <div className="text-center mb-6 lg:mb-8">
+          <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-7xl tracking-tight leading-none drop-shadow-lg">
+            <span className="text-white">MEET</span> <span className="text-primary">ZACHARIAH TIPPETT</span>
+          </h1>
+        </div>
+
         {/* Video Gallery - Main Feature */}
         <div
           ref={videoGalleryRef}
