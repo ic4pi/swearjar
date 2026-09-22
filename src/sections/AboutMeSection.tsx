@@ -66,24 +66,12 @@ export function AboutMeSection() {
     <section
       ref={sectionRef}
       id="about-me"
-      className="relative min-h-screen bg-background py-20 lg:py-32 z-20"
+      className="relative min-h-screen py-20 lg:py-32 z-20"
     >
       <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto relative">
         {/* Layer 2 - Semi-transparent black background */}
         <div className="absolute inset-0 bg-card/10 rounded-lg" />
-        
-        {/* Watermark behind the content cards */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.12]"
-          style={{
-            backgroundImage: 'url(/tic-happens-watermark.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        />
-        
+
         {/* Content */}
         <div className="relative z-10 p-8">
         {/* Section Header */}
