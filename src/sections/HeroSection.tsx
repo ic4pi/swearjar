@@ -113,7 +113,7 @@ export function HeroSection() {
         {/* Headline */}
         <div className="text-center mb-6 lg:mb-8">
           <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-7xl tracking-tight leading-none drop-shadow-lg">
-            <span className="text-white">MEET</span> <span className="text-primary">ZACHARIAH TIPPETT</span>
+            <span className="text-white">MEET</span> <span className="text-primary">ZACHARIAH</span>
           </h1>
         </div>
 
