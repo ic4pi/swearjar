@@ -10,6 +10,18 @@ gsap.registerPlugin(ScrollTrigger);
 // Managed from the dashboard's Videos tab.
 const HERO_MAX_VIDEOS = 3;
 
+// Skips the silent lead-in before he says "what's good everybody" - both on
+// load and on every loop, since <video loop> alone always wraps to 0:00.
+const HERO_VIDEO_START = 3;
+
+function seekToStart(v: HTMLVideoElement) {
+  try {
+    v.currentTime = HERO_VIDEO_START;
+  } catch {
+    // Ignored - readyState too low to seek yet; loadedmetadata will retry.
+  }
+}
+
 /**
  * Full-screen video hero. A self-hosted clip autoplays muted as a moving,
  * full-bleed backdrop; a YouTube-embedded one shows its poster with a play
@@ -45,7 +57,7 @@ export function HeroSection() {
     if (muted) {
       // Unmuting is a deliberate gesture — restart the clip from the top
       // so the audio lands from the beginning, not mid-sentence.
-      v.currentTime = 0;
+      seekToStart(v);
       v.muted = false;
       v.play().catch(() => {});
       setMuted(false);
@@ -59,6 +71,7 @@ export function HeroSection() {
     const v = videoRef.current;
     if (v && source.kind === 'file') {
       v.muted = true;
+      seekToStart(v);
       v.play().catch(() => {});
     }
   }, [source.kind === 'file' ? source.url : null]);
@@ -120,9 +133,14 @@ export function HeroSection() {
             poster={heroVideo?.thumbnail}
             autoPlay
             muted
-            loop
             playsInline
             preload="auto"
+            onLoadedMetadata={(e) => seekToStart(e.currentTarget)}
+            onEnded={(e) => {
+              const v = e.currentTarget;
+              seekToStart(v);
+              v.play().catch(() => {});
+            }}
           />
         ) : source.kind === 'youtube' && isPlaying ? (
           <iframe
