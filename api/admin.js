@@ -453,6 +453,29 @@ async function updateSettings(body) {
   return { settings: store.settings };
 }
 
+/* ── Messages (booking / contact inbox) ──
+   Submitted publicly through /api/messages.js; only readable/manageable
+   here, behind the same admin session as everything else. */
+
+async function markMessageRead(body) {
+  const id = String(body.id || '');
+  const read = body.read !== false;
+  const store = await readStore();
+  const idx = store.messages.findIndex((m) => m.id === id);
+  if (idx === -1) return { error: 'Message not found' };
+  store.messages[idx] = { ...store.messages[idx], read };
+  await writeStore(store);
+  return { message: store.messages[idx] };
+}
+
+async function deleteMessage(body) {
+  const id = String(body.id || '');
+  const store = await readStore();
+  store.messages = store.messages.filter((m) => m.id !== id);
+  await writeStore(store);
+  return { ok: true };
+}
+
 /* ── Auth ──
    Two passwords, on purpose: ADMIN_PASSWORD (the Vercel env var) is a
    break-glass override that always logs in, for whoever controls the
@@ -718,6 +741,35 @@ module.exports = async (req, res) => {
         return;
       }
       res.status(200).json(await importLegacyCatalog());
+      return;
+    }
+
+    if (action === 'messages') {
+      const { messages } = await readStore();
+      res.status(200).json({ messages });
+      return;
+    }
+
+    if (action === 'mark-message-read') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      const out = await markMessageRead(req.body || {});
+      if (out.error) {
+        res.status(400).json(out);
+        return;
+      }
+      res.status(200).json(out);
+      return;
+    }
+
+    if (action === 'delete-message') {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
+      res.status(200).json(await deleteMessage(req.body || {}));
       return;
     }
 

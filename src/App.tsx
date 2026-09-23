@@ -5,6 +5,7 @@ import { Navigation } from '@/components/Navigation';
 import { Cart } from '@/components/Cart';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import { DonateModal } from '@/components/DonateModal';
+import { BookingModal } from '@/components/BookingModal';
 import { HeroSection } from '@/sections/HeroSection';
 import { AboutSection } from '@/sections/AboutSection';
 import { ProductsSection } from '@/sections/ProductsSection';
@@ -29,6 +30,9 @@ function App() {
 
   // Donate modal state
   const [isDonateOpen, setIsDonateOpen] = useState(false);
+
+  // Booking modal state
+  const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   // Check for /dash route
   useEffect(() => {
@@ -139,6 +143,7 @@ function App() {
         cartCount={cartCount}
         onCartClick={() => setIsCartOpen(true)}
         onDonateClick={() => setIsDonateOpen(true)}
+        onBookClick={() => setIsBookingOpen(true)}
       />
 
       {/* Main Content */}
@@ -147,7 +152,7 @@ function App() {
           <>
             <HeroSection />
             <ProductsSection />
-            <AboutSection onDonateClick={() => setIsDonateOpen(true)} />
+            <AboutSection onDonateClick={() => setIsDonateOpen(true)} onBookClick={() => setIsBookingOpen(true)} />
             <SupportSection onDonateClick={() => setIsDonateOpen(true)} />
             <PhotosSection />
             <ClosingSection />
@@ -177,6 +182,12 @@ function App() {
       <DonateModal
         isOpen={isDonateOpen}
         onClose={() => setIsDonateOpen(false)}
+      />
+
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
       />
 
       {/* Toast notifications */}

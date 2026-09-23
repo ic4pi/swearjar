@@ -41,6 +41,16 @@ export const api = {
     const data = await response.json();
     return data.photos;
   },
+
+  async sendMessage(input: { name: string; email: string; phone?: string; type: 'booking' | 'general'; message: string }): Promise<void> {
+    const response = await fetch(`${API_BASE}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to send message');
+  },
 };
 
 // Admin actions all go through the single /api/admin?action=... endpoint

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, Menu } from 'lucide-react';
+import { ShoppingBag, Heart, Menu, Mic2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -11,9 +11,10 @@ interface NavigationProps {
   cartCount: number;
   onCartClick: () => void;
   onDonateClick: () => void;
+  onBookClick: () => void;
 }
 
-export function Navigation({ cartCount, onCartClick, onDonateClick }: NavigationProps) {
+export function Navigation({ cartCount, onCartClick, onDonateClick, onBookClick }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,12 +51,15 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
       }`}
     >
       <nav className="w-full px-6 lg:px-12 py-4 flex items-center justify-between">
-        {/* Logo - transparent PNG on a straight-edged teal bar (not a rounded pill) so it reads on the dark page bg */}
+        {/* Wordmark - plain text, no logo file. Bold, uppercase, teal accent on the surname. */}
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="shrink-0 bg-primary hover:brightness-110 transition-all shadow-[0_0_30px_hsl(var(--primary)/0.5)] px-6 sm:px-8 lg:px-10 py-2"
+          className="shrink-0 group"
         >
-          <img src="/zachariah-tippett-logo.png" alt="Zachariah Tippett" className="h-16 sm:h-20 lg:h-24 w-auto" />
+          <span className="font-display font-black tracking-tight text-xl sm:text-2xl lg:text-3xl uppercase">
+            <span className="text-white">Zachariah</span>{' '}
+            <span className="text-primary group-hover:brightness-110 transition-all">Tippett</span>
+          </span>
         </button>
 
         {/* Desktop Navigation - Unorthodox style */}
@@ -76,6 +80,16 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
 
           {/* Divider */}
           <div className="w-px h-6 bg-border" />
+
+          {/* Book Button */}
+          <Button
+            onClick={onBookClick}
+            variant="ghost"
+            className="font-bold text-sm tracking-wider uppercase hover:text-primary hover:bg-primary/10"
+          >
+            <Mic2 className="w-4 h-4 mr-2" />
+            Book
+          </Button>
 
           {/* Donate Button */}
           <Button
@@ -120,7 +134,18 @@ export function Navigation({ cartCount, onCartClick, onDonateClick }: Navigation
                 </button>
               ))}
               
-              <div className="border-t border-border pt-6">
+              <div className="border-t border-border pt-6 space-y-3">
+                <Button
+                  onClick={() => {
+                    onBookClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  <Mic2 className="w-5 h-5 mr-2" />
+                  Book
+                </Button>
                 <Button
                   onClick={() => {
                     onDonateClick();

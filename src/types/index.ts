@@ -59,6 +59,17 @@ export interface SiteSettings {
   cashAppTag: string;
 }
 
+export interface InboxMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  type: 'booking' | 'general';
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export interface CartItem {
   product: Product;
   variant: string;

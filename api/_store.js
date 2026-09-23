@@ -28,6 +28,7 @@ const DEFAULTS = {
   shows: [],
   videos: [],
   photos: [],
+  messages: [],
   settings: { cashAppTag: '$TourettesInc' },
   auth: { password: 'TOURETTES2026', isDefault: true },
 };
@@ -37,6 +38,7 @@ function defaults() {
     shows: [],
     videos: [],
     photos: [],
+    messages: [],
     settings: { ...DEFAULTS.settings },
     auth: { ...DEFAULTS.auth },
   };
@@ -62,6 +64,7 @@ async function readStore() {
       shows: Array.isArray(data.shows) ? data.shows : [],
       videos: Array.isArray(data.videos) ? data.videos : [],
       photos: Array.isArray(data.photos) ? data.photos : [],
+      messages: Array.isArray(data.messages) ? data.messages : [],
       settings: { ...DEFAULTS.settings, ...(data && typeof data.settings === 'object' ? data.settings : {}) },
       auth: { ...DEFAULTS.auth, ...(data && typeof data.auth === 'object' ? data.auth : {}) },
     };

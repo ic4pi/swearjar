@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, Save, Plus, Trash2, LogOut, Calendar, ShoppingBag, DollarSign, Video as VideoIcon, Image } from 'lucide-react';
+import { Lock, Eye, EyeOff, Save, Plus, Trash2, LogOut, Calendar, ShoppingBag, DollarSign, Video as VideoIcon, Image, Mail, Mic2, MailOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Show, Product, MerchizeCatalogProduct, Video, Photo } from '@/types';
+import type { Show, Product, MerchizeCatalogProduct, Video, Photo, InboxMessage } from '@/types';
 import { adminApi, api } from '@/lib/api';
 
 interface AdminDashboardProps {
@@ -63,6 +63,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [messages, setMessages] = useState<InboxMessage[]>([]);
   const [cashAppTagDraft, setCashAppTagDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [merchizeLabel, setMerchizeLabel] = useState('Smart Peoples');
@@ -87,6 +88,8 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       setProducts(productsData);
       const { settings: s } = await adminApi.get(token, 'settings');
       setCashAppTagDraft(s.cashAppTag || '');
+      const { messages: m } = await adminApi.get(token, 'messages');
+      setMessages(m || []);
     } catch (err) {
       console.error('Failed to load admin data:', err);
     }
@@ -380,6 +383,29 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
     }
   };
 
+  // ── Messages ──
+
+  const handleToggleMessageRead = async (id: string, read: boolean) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read } : m)));
+    try {
+      await adminApi.call(authToken, 'mark-message-read', { id, read });
+    } catch (err) {
+      console.error('Failed to update message:', err);
+      await loadData(authToken);
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    try {
+      await adminApi.call(authToken, 'delete-message', { id });
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete message');
+    }
+  };
+
+  const unreadCount = messages.filter((m) => !m.read).length;
+
   // ── Settings ──
 
   const handleSaveCashAppTag = async () => {
@@ -468,7 +494,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
         )}
 
         <Tabs defaultValue={mustChangePassword ? 'settings' : 'shows'} className="pt-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="shows">
               <Calendar className="w-4 h-4 mr-2" />
               Shows
@@ -484,6 +510,15 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
             <TabsTrigger value="products">
               <ShoppingBag className="w-4 h-4 mr-2" />
               Products
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="relative">
+              <Mail className="w-4 h-4 mr-2" />
+              Messages
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="settings">
               <DollarSign className="w-4 h-4 mr-2" />
@@ -776,6 +811,66 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 <div className="text-center py-8">
                   <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No products yet.</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Messages Tab */}
+          <TabsContent value="messages" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-lg">Booking &amp; Contact Inbox</h3>
+              {unreadCount > 0 && (
+                <span className="text-sm text-muted-foreground">{unreadCount} unread</span>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`p-4 bg-background border rounded-lg space-y-2 ${msg.read ? 'border-border' : 'border-primary/50'}`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      {msg.type === 'booking' ? (
+                        <Mic2 className="w-4 h-4 text-primary shrink-0" />
+                      ) : (
+                        <Mail className="w-4 h-4 text-muted-foreground shrink-0" />
+                      )}
+                      <span className="font-bold">{msg.name}</span>
+                      {!msg.read && <span className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {new Date(msg.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground flex flex-wrap gap-x-4">
+                    <a href={`mailto:${msg.email}`} className="hover:text-primary">{msg.email}</a>
+                    {msg.phone && <span>{msg.phone}</span>}
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => handleToggleMessageRead(msg.id, !msg.read)}
+                      className="p-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                      title={msg.read ? 'Mark unread' : 'Mark read'}
+                    >
+                      {msg.read ? <Mail className="w-4 h-4" /> : <MailOpen className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id)}
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {messages.length === 0 && (
+                <div className="text-center py-8">
+                  <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No messages yet.</p>
                 </div>
               )}
             </div>

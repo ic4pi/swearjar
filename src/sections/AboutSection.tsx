@@ -1,23 +1,31 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Mic2 } from 'lucide-react';
 import { useShows } from '@/hooks/useSiteData';
-import { getNextThreeShows } from '@/utils/showUtils';
+import { getNextThreeShows, getFilteredShows } from '@/utils/showUtils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface AboutSectionProps {
   onDonateClick: () => void;
+  onBookClick: () => void;
 }
 
-export function AboutSection({ onDonateClick }: AboutSectionProps) {
+export function AboutSection({ onBookClick }: AboutSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const showsRef = useRef<HTMLDivElement>(null);
+  const [showAllShows, setShowAllShows] = useState(false);
   const { shows } = useShows();
   const nextThreeShows = getNextThreeShows(shows);
+  const allShows = getFilteredShows(shows);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -122,14 +130,21 @@ export function AboutSection({ onDonateClick }: AboutSectionProps) {
               ))}
             </div>
 
-            {/* See All Link */}
-            <div className="show-item pt-4">
-              <a
-                href="#"
+            {/* See All / Book */}
+            <div className="show-item pt-4 flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => setShowAllShows(true)}
                 className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
               >
                 See all dates
-              </a>
+              </button>
+              <button
+                onClick={onBookClick}
+                className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+              >
+                <Mic2 className="w-4 h-4" />
+                Book Zach for your venue
+              </button>
             </div>
           </div>
 
@@ -152,6 +167,49 @@ export function AboutSection({ onDonateClick }: AboutSectionProps) {
           </div>
         </div>
       </div>
+
+      <Dialog open={showAllShows} onOpenChange={setShowAllShows}>
+        <DialogContent className="sm:max-w-lg bg-card border-border max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display font-black text-2xl">
+              ALL <span className="text-primary">SHOWS</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {allShows.map((show) => (
+              <div
+                key={show.id}
+                className="bg-background border border-border rounded-lg p-4 flex items-start justify-between gap-4"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <Calendar className="w-4 h-4" />
+                    <span>{show.date}</span>
+                  </div>
+                  <h4 className="font-bold text-foreground">{show.venue}</h4>
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{show.location}</span>
+                  </div>
+                </div>
+                {show.link && show.link !== '#' && (
+                  <a
+                    href={show.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors shrink-0"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+            ))}
+            {allShows.length === 0 && (
+              <p className="text-muted-foreground text-center py-8">No shows scheduled right now — check back soon.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
