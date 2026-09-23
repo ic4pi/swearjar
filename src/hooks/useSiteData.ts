@@ -39,8 +39,8 @@ const fallbackVideos: Video[] = [
   {
     id: '1',
     title: 'Kill Tony',
-    thumbnail: '/video/zach-kill-tony-poster.jpg',
-    url: '/video/zach-kill-tony.mp4',
+    thumbnail: '/assets/video/zach-kill-tony-poster.jpg',
+    url: '/assets/video/zach-kill-tony.mp4',
   }
 ];
 
