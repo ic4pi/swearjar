@@ -444,10 +444,26 @@ async function deletePhoto(body) {
 
 /* ── Settings ── */
 
+// Text fields the dashboard's Settings tab can write. cashAppTag is kept
+// non-empty (it's a hard requirement of the donate flow); the rest are
+// optional and simply cleared when blanked out.
+const REQUIRED_NONEMPTY_SETTINGS = ['cashAppTag'];
+const OPTIONAL_SETTINGS = [
+  'contactEmail', 'bookingEmail', 'location',
+  'patreonUrl', 'instagramUrl', 'tiktokUrl', 'youtubeUrl', 'twitchUrl',
+];
+
 async function updateSettings(body) {
   const store = await readStore();
-  if (typeof body.cashAppTag === 'string' && body.cashAppTag.trim()) {
-    store.settings.cashAppTag = body.cashAppTag.trim();
+  for (const key of REQUIRED_NONEMPTY_SETTINGS) {
+    if (typeof body[key] === 'string' && body[key].trim()) {
+      store.settings[key] = body[key].trim();
+    }
+  }
+  for (const key of OPTIONAL_SETTINGS) {
+    if (typeof body[key] === 'string') {
+      store.settings[key] = body[key].trim();
+    }
   }
   await writeStore(store);
   return { settings: store.settings };

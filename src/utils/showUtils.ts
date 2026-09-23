@@ -46,27 +46,34 @@ export const getFilteredShows = (shows: Show[]): Show[] => {
   });
 };
 
-// Get next 3 upcoming shows for hero section
-export const getNextThreeShows = (shows: Show[]): Show[] => {
-  const filteredShows = getFilteredShows(shows);
-  
-  // Sort shows: dated shows first (by date), then weekly shows (by day order)
-  const sortedShows = [...filteredShows].sort((a, b) => {
+// Sort shows: dated shows first (soonest date first), then weekly
+// recurring shows (in day-of-week order).
+export const sortShows = (shows: Show[]): Show[] => {
+  return [...shows].sort((a, b) => {
     const aIsDated = !isDayOfWeek(a.date);
     const bIsDated = !isDayOfWeek(b.date);
-    
+
     if (aIsDated && !bIsDated) return -1; // Dated shows come first
     if (!aIsDated && bIsDated) return 1;  // Weekly shows come after
-    
+
     if (aIsDated && bIsDated) {
       // Sort dated shows by date
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     }
-    
+
     // Sort weekly shows by day order
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return days.indexOf(a.date) - days.indexOf(b.date);
   });
-  
-  return sortedShows.slice(0, 3);
+};
+
+// Every upcoming/recurring show, filtered and sorted the same way the
+// hero's shortlist is, but with nothing chopped off.
+export const getUpcomingShows = (shows: Show[]): Show[] => {
+  return sortShows(getFilteredShows(shows));
+};
+
+// Get next 3 upcoming shows for hero section
+export const getNextThreeShows = (shows: Show[]): Show[] => {
+  return getUpcomingShows(shows).slice(0, 3);
 };

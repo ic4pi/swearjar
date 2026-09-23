@@ -4,7 +4,17 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["Anton", "sans-serif"],
+        hand: ["Caveat", "cursive"],
+        sans: ["Archivo", "-apple-system", "sans-serif"],
+      },
       colors: {
+        teal: {
+          DEFAULT: "#42c8e3",
+          dim: "#2a8fa3",
+          deep: "#155e6e",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
