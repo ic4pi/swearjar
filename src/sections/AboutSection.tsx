@@ -81,7 +81,8 @@ export function AboutSection({ onBookClick }: AboutSectionProps) {
     <section
       ref={sectionRef}
       id="about"
-      className="relative min-h-screen py-20 lg:py-32 z-20"
+      className="relative min-h-screen watermark-bg py-20 lg:py-32 z-20"
+      style={{ '--wm-pos': 'center 22%' } as React.CSSProperties}
     >
 
       <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto relative">

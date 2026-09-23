@@ -105,7 +105,8 @@ export function HeroSection() {
     <section
       ref={sectionRef}
       id="hero"
-      className="section-pinned flex flex-col z-10"
+      className="section-pinned watermark-bg flex flex-col z-10"
+      style={{ '--wm-pos': 'center 0%' } as React.CSSProperties}
     >
       {/* Main Content Container */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 lg:px-8 pt-28 lg:pt-36 pb-12 lg:pb-16">

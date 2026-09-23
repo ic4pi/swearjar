@@ -49,7 +49,8 @@ export function SupportSection({ onDonateClick: _onDonateClick }: SupportSection
     <section
       ref={sectionRef}
       id="support"
-      className="relative py-16 lg:py-20 z-20"
+      className="relative watermark-bg py-16 lg:py-20 z-20"
+      style={{ '--wm-pos': 'center 65%' } as React.CSSProperties}
     >
       <div className="w-full px-6 lg:px-16 max-w-4xl mx-auto relative">
         {/* Content */}

@@ -42,20 +42,6 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
-    /* One background art piece behind the whole page, fixed so sections
-       stack translucently on top of it instead of each carrying its own
-       copy. The watermark PNG itself already carries the real dimming:
-       its white line-art was pre-processed down to ~30% alpha so it reads
-       as a quiet pattern, while its teal ribbons were left near-opaque so
-       they're the one thing that visibly pops. This gradient only adds a
-       light, uniform tint on top so nothing overrides that balance. */
-    background-image:
-      linear-gradient(hsl(var(--background) / 0.72), hsl(var(--background) / 0.72)),
-      url('/tic-happens-watermark.png');
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
   }
 }
 
@@ -165,6 +151,22 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+/* Watermark art, one section at a time.
+   The tall watermark PNG (its white line-art pre-dimmed to ~30% alpha,
+   teal ribbons left near-opaque - see tic-happens-watermark.png) used to
+   sit fixed on <body>, which pins the same crop to the viewport no matter
+   which section is on screen. Instead each section that wants the art
+   carries its own copy of this class and picks which vertical band shows
+   through --wm-pos, so scrolling the page actually tours the artwork. */
+.watermark-bg {
+  background-image:
+    linear-gradient(hsl(var(--background) / 0.72), hsl(var(--background) / 0.72)),
+    url('/tic-happens-watermark.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: var(--wm-pos, center top);
 }
 
 /* Navigation styles */
