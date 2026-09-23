@@ -1,154 +1,103 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, ExternalLink } from 'lucide-react';
-import { useShows } from '@/hooks/useSiteData';
-import { getNextThreeShows } from '@/utils/showUtils';
+import { aboutMeText } from '@/data/siteData';
 
 gsap.registerPlugin(ScrollTrigger);
 
-interface AboutSectionProps {
-  onDonateClick: () => void;
-}
+const STATS = [
+  { big: '1 in 100', small: "school-aged kids have Tourette's Syndrome" },
+  { big: '~10%', small: "of people with TS swear — it's not the punchline you think" },
+  { big: '1', small: 'laugh at a time. That\'s how awareness spreads' },
+];
 
-export function AboutSection({ onDonateClick }: AboutSectionProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const showsRef = useRef<HTMLDivElement>(null);
-  const { shows } = useShows();
-  const nextThreeShows = getNextThreeShows(shows);
+export function AboutSection() {
+  const root = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!sectionRef.current) return;
-
     const ctx = gsap.context(() => {
-      // Content animation
-      const contentItems = contentRef.current?.querySelectorAll('.animate-item');
-      if (contentItems && contentItems.length > 0) {
+      gsap.fromTo(
+        '.about-polaroid',
+        { opacity: 0, y: 80, rotate: 8 },
+        {
+          opacity: 1,
+          y: 0,
+          rotate: 3,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: '.about-polaroid', start: 'top 85%' },
+        }
+      );
+      gsap.utils.toArray<HTMLElement>('.about-line').forEach((el, i) => {
         gsap.fromTo(
-          contentItems,
-          { y: 40, opacity: 0 },
+          el,
+          { opacity: 0, y: 30 },
           {
+            opacity: 1,
             y: 0,
-            opacity: 1,
-            duration: 0.7,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: contentRef.current,
-              start: 'top 75%',
-              toggleActions: 'play none none reverse',
-            },
+            duration: 0.8,
+            delay: i * 0.05,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: el, start: 'top 88%' },
           }
         );
-      }
-
-      // Shows animation
-      const showItems = showsRef.current?.querySelectorAll('.show-item');
-      if (showItems && showItems.length > 0) {
+      });
+      gsap.utils.toArray<HTMLElement>('.stat-block').forEach((el, i) => {
         gsap.fromTo(
-          showItems,
-          { x: 30, opacity: 0 },
+          el,
+          { opacity: 0, scale: 0.92 },
           {
-            x: 0,
             opacity: 1,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: showsRef.current,
-              start: 'top 75%',
-              toggleActions: 'play none none reverse',
-            },
+            scale: 1,
+            duration: 0.7,
+            delay: i * 0.12,
+            ease: 'back.out(1.4)',
+            scrollTrigger: { trigger: el, start: 'top 90%' },
           }
         );
-      }
-    }, sectionRef);
-
+      });
+    }, root);
     return () => ctx.revert();
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      id="about"
-      className="relative min-h-screen py-20 lg:py-32 z-20"
-    >
+    <section ref={root} id="about" className="relative z-10 mx-auto max-w-[1600px] px-5 py-24 md:px-10 md:py-36">
+      <div className="mb-14 flex items-end justify-between gap-6">
+        <div>
+          <p className="mb-2 font-hand text-2xl text-teal md:text-3xl">hello humans!</p>
+          <h2 className="display-lg">
+            Same brain.<br />
+            <span className="outline-text">Different day.</span>
+          </h2>
+        </div>
+        <span className="hidden font-display text-7xl text-white/10 md:block">02</span>
+      </div>
 
-      <div className="w-full px-6 lg:px-16 max-w-7xl mx-auto relative">
-        {/* Layer 2 - Semi-transparent black background */}
-        <div className="absolute inset-0 bg-card/10 rounded-lg" />
-
-        {/* Two Column Layout - Shows and About Info */}
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 relative z-10 p-8">
-          {/* Left Column - Shows List */}
-          <div ref={showsRef} id="shows" className="space-y-6">
-            <div className="show-item">
-              <h3 className="font-display font-black text-2xl lg:text-3xl tracking-tight mb-6">
-                UPCOMING <span className="text-primary">SHOWS</span>
-              </h3>
-            </div>
-
-            {/* Shows List - Only Next 3 Shows */}
-            <div className="space-y-4">
-              {nextThreeShows.map((show) => (
-                <div
-                  key={show.id}
-                  className="show-item group bg-card border border-border rounded-lg p-5 hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-primary font-bold">
-                        <Calendar className="w-4 h-4" />
-                        <span>{show.date}</span>
-                      </div>
-                      <h4 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
-                        {show.venue}
-                      </h4>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{show.location}</span>
-                      </div>
-                    </div>
-                    <a
-                      href={show.link}
-                      className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* See All Link */}
-            <div className="show-item pt-4">
-              <a
-                href="#"
-                className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
-              >
-                See all dates
-              </a>
-            </div>
+      <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:gap-10">
+        {/* Polaroid */}
+        <div className="lg:col-span-4">
+          <div className="about-polaroid polaroid mx-auto max-w-sm will-change-transform lg:sticky lg:top-32">
+            <span className="tape" />
+            <img src="/assets/hero_polaroid.jpg" alt="Zachariah Tippett on stage" />
+            <p className="mt-3 text-center font-hand text-2xl text-[#1a1a1a]">you can call me Tourette's</p>
           </div>
+        </div>
 
-          {/* Right Column - Quick About Info */}
-          <div className="space-y-6">
-            <div className="animate-item">
-              <h3 className="font-display font-black text-2xl lg:text-3xl tracking-tight mb-6">
-                ABOUT <span className="text-primary">ZACH</span>
-              </h3>
-            </div>
-            
-            {/* Quick About Info */}
-            <div className="animate-item">
-              <div className="bg-card border border-border rounded-xl p-6 text-left hover:border-primary/50 transition-all">
-                <p className="text-muted-foreground">
-                  Zach "Tourette's" Tippett uses comedy to spread awareness about Tourette's Syndrome while performing stand-up across the country.
-                </p>
+        {/* Bio + stats */}
+        <div className="lg:col-span-8">
+          {aboutMeText.split('\n\n').map((para, i) => (
+            <p key={i} className="about-line mb-6 max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl">
+              {para}
+            </p>
+          ))}
+
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {STATS.map((s) => (
+              <div key={s.big} className="stat-block border-2 border-white/15 p-6 transition-colors duration-300 hover:border-teal/60">
+                <div className="font-display text-4xl text-teal md:text-5xl">{s.big}</div>
+                <p className="mt-3 text-sm leading-snug text-white/65">{s.small}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

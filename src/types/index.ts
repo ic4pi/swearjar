@@ -57,6 +57,14 @@ export interface Photo {
 
 export interface SiteSettings {
   cashAppTag: string;
+  contactEmail: string;
+  bookingEmail: string;
+  location: string;
+  patreonUrl: string;
+  instagramUrl: string;
+  tiktokUrl: string;
+  youtubeUrl: string;
+  twitchUrl: string;
 }
 
 export interface CartItem {

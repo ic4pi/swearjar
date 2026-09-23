@@ -79,7 +79,17 @@ const fallbackProducts: Product[] = [
   },
 ];
 
-const fallbackSettings: SiteSettings = { cashAppTag: '$TourettesInc' };
+const fallbackSettings: SiteSettings = {
+  cashAppTag: '$TourettesInc',
+  contactEmail: 'tourettesinc@gmail.com',
+  bookingEmail: 'tourettesinc@gmail.com',
+  location: 'San Antonio, Texas',
+  patreonUrl: '',
+  instagramUrl: '',
+  tiktokUrl: '',
+  youtubeUrl: '',
+  twitchUrl: '',
+};
 
 // Merges products fetched from /api/products into the built-in list by
 // name: a name that matches a built-in gets that card's price/description/

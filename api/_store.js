@@ -28,7 +28,17 @@ const DEFAULTS = {
   shows: [],
   videos: [],
   photos: [],
-  settings: { cashAppTag: '$TourettesInc' },
+  settings: {
+    cashAppTag: '$TourettesInc',
+    contactEmail: 'tourettesinc@gmail.com',
+    bookingEmail: 'tourettesinc@gmail.com',
+    location: 'San Antonio, Texas',
+    patreonUrl: '',
+    instagramUrl: '',
+    tiktokUrl: '',
+    youtubeUrl: '',
+    twitchUrl: '',
+  },
   auth: { password: 'TOURETTES2026', isDefault: true },
 };
 
