@@ -1,86 +1,49 @@
-# Zachariah Tippett Website
+# swearjar — Zachariah Tippett
 
-A cutting-edge, immersive website for Zachariah Tippett - stand-up comedian, activist, and Tourette's Syndrome advocate.
+Website for stand-up comedian and Tourette's Syndrome awareness advocate
+Zachariah Tippett. Full-stack rebuild (this branch replaces the old Vite
+frontend on `main`).
+
+## Stack
+
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Hono + tRPC 11 (end-to-end types, superjson)
+- **Database**: MySQL via Drizzle ORM (TiDB-compatible, `mode: "planetscale"`)
+- **Motion**: GSAP + ScrollTrigger + Lenis smooth scroll
+- **Auth**: custom admin login — scrypt password hash, HMAC-signed bearer
+  tokens (7-day TTL, secret derived from `DATABASE_URL`, never committed)
 
 ## Features
 
-### Visual Design
-- **Dark theme** with high-contrast typography (minimum 600 weight)
-- **Scroll-triggered line art animations** with teal ribbons for Tourette's awareness
-- **GSAP-powered animations** with pinned sections and smooth transitions
-- **Paper grain texture overlay** for editorial feel
-- **Polaroid-style photo frames** with shadow effects
+- Video hero (Kill Tony clip) with sound toggle — unmute restarts the clip
+- Upcoming shows (next two featured, expandable), managed from the dashboard
+- Products in three categories: **Multipurpose Apparel** (TS activism),
+  **Just Funny**, and **Odds & Ends** (hidden until products are assigned)
+- Merchize integration (catalog sync + connection test) from the dashboard
+- Donation (Cash App / Patreon) + contact modal (general vs booking)
+- Newsletter placeholder (GROQ — pending)
+- Dashboard at `/admin`: shows, products, site settings, Merchize, password
 
-### Sections
-1. **Hero** - Video gallery with brand introduction
-2. **About + Shows** - Two-column layout with bio and upcoming shows
-3. **Video Reel** - Featured performance section
-4. **Products** - 8 apparel items + accessories (linked to Printful)
-5. **Support/Donate** - Cash App and Patreon integration
-6. **Closing** - Social links and contact
-
-### eCommerce
-- 8 products with variants (Men's T-Shirt, Women's T-Shirt, Unisex Sweater)
-- Shopping cart functionality
-- Printful integration for fulfillment
-- "Other Stuff" section (stickers, mugs, pins, tote bags)
-
-### Hidden Admin Dashboard
-
-#### Access Methods
-1. **Keyboard Shortcut**: Hold `Ctrl` + `Tab` + `Down Arrow` together
-2. **Direct Link**: Navigate to site and use login modal
-
-#### Default Credentials
-- **Username**: `admin`
-- **Password**: generated on first server run and printed once to the server log (or set via `ADMIN_DEFAULT_PASSWORD`)
-
-#### Admin Features
-- **Shows Management**: Add, edit, delete upcoming shows
-- **Video Gallery**: Manage video embeds
-- **Donation Tracking**: View donation history
-- **Credential Settings**: Change username and password
-
-#### Changing Admin Credentials
-1. Access admin dashboard
-2. Go to "Settings" tab
-3. Enter new username and password
-4. Click "Save Changes"
-
-## Tech Stack
-
-- **Framework**: React + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
-- **Animations**: GSAP + ScrollTrigger
-- **Icons**: Lucide React
-
-## Development
+## Develop
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
+npm run db:push   # sync schema (needs DATABASE_URL in .env)
+npm run dev       # http://localhost:3000
+npm run check     # type-check
+npm run build     # client -> dist/public, server -> dist/boot.js
 ```
 
-## Deployment
+Admin login is seeded by `db/seed.ts` (default password printed in its
+output — change it in the dashboard immediately).
 
-The site is built to the `dist/` folder and can be deployed to any static hosting service.
+## Deploy
 
-## Donations
+Dockerfile included (dynamic/full-stack). Requires `DATABASE_URL`.
 
-Cash App Tag: `$TourettesInc`
+## Legacy
 
-## Contact
-
-Email: tourettesinc@gmail.com <!-- TODO: update to Zachariah's new contact email/cashapp when ready -->
-Location: San Antonio, Texas
-
----
-
-Built with ❤️ for Tourette's awareness through comedy.
+The old site code is still on `main`. This branch is the source of truth
+going forward. `node_modules` committed on `main` is not carried into this
+branch's history beyond the fork point — consider `git filter-repo` or BFG
+to purge it from the repo entirely before archiving `main`.
