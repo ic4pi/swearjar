@@ -10,7 +10,7 @@ type MarqueeProps = {
 /**
  * Infinite marquee ribbon with hand-drawn separators. Subscribes to the
  * global scroll velocity (set by Lenis in Home) — the faster you scroll,
- * the faster the ribbon runs. Idle, it just cruises.
+ * the faster the ribbon runs. Sits still when the page isn't scrolling.
  */
 export function Marquee({ items, reverse = false, className = "", textClassName = "" }: MarqueeProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -20,22 +20,25 @@ export function Marquee({ items, reverse = false, className = "", textClassName 
     if (!track) return;
     let raf = 0;
     let pos = 0;
-    const baseSpeed = reverse ? -0.6 : 0.6;
     let last = performance.now();
 
     const tick = (now: number) => {
       const dt = Math.min(now - last, 64);
       last = now;
       const velocity = (window as unknown as { __scrollVelocity?: number }).__scrollVelocity ?? 0;
-      const boost = Math.min(Math.abs(velocity) / 12, 6);
-      const dir = velocity < -0.5 ? -1 : velocity > 0.5 ? 1 : reverse ? -1 : 1;
-      pos -= dir * (Math.abs(baseSpeed) + boost) * (dt / 16.7);
-      const half = track.scrollWidth / 2;
-      if (half > 0) {
-        if (pos <= -half) pos += half;
-        if (pos > 0) pos -= half;
+      // Deadzone - Lenis can leave a tiny non-zero velocity sitting around
+      // after it settles, which would otherwise creep the ribbon forever.
+      const speed = Math.abs(velocity) > 0.05 ? Math.min(Math.abs(velocity) / 12, 6) : 0;
+      if (speed > 0) {
+        const dir = (velocity < 0 ? -1 : 1) * (reverse ? -1 : 1);
+        pos -= dir * speed * (dt / 16.7);
+        const half = track.scrollWidth / 2;
+        if (half > 0) {
+          if (pos <= -half) pos += half;
+          if (pos > 0) pos -= half;
+        }
+        track.style.transform = `translateX(${pos}px)`;
       }
-      track.style.transform = `translateX(${pos}px)`;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
