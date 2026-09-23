@@ -47,9 +47,13 @@ export function HeroSection() {
     const v = videoRef.current;
     if (!v) return;
     if (muted) {
-      // Unmuting is a deliberate gesture — jump to where the bit actually
-      // starts so the audio lands on the joke, not the silent lead-in.
-      v.currentTime = HERO_VIDEO_UNMUTE_START;
+      // Unmuting during the silent lead-in leaves playback right where it
+      // is. Unmuting after the line has already started (or already
+      // passed, e.g. on a later loop) jumps back to its start, so sound
+      // never comes in mid-sentence - but never further back than that.
+      if (v.currentTime >= HERO_VIDEO_UNMUTE_START) {
+        v.currentTime = HERO_VIDEO_UNMUTE_START;
+      }
       v.muted = false;
       v.play().catch(() => {});
       setMuted(false);
