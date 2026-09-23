@@ -3,12 +3,16 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useVideos } from '@/hooks/useSiteData';
 import { getVideoSource } from '@/utils/videoUtils';
+import { aboutMeText } from '@/data/siteData';
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Hero keeps its own playlist small - realistically 1-2 videos, 3 at most.
 // Managed from the dashboard's Videos tab.
 const HERO_MAX_VIDEOS = 3;
+
+// Just the opener, to tease the full bio further down the page.
+const heroBioIntro = aboutMeText.split('\n\n').slice(0, 2);
 
 // Unmuting jumps past the silent lead-in to where he says "what's good
 // everybody" - the muted ambient loop still plays from 0:00.
@@ -115,6 +119,10 @@ export function HeroSection() {
 
   const name = 'ZACHARIAH TIPPETT';
 
+  const scrollToAbout = () => {
+    document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section ref={root} id="top" className="relative flex h-[100svh] items-end overflow-hidden">
       {/* Video backdrop — full-bleed, always in motion */}
@@ -195,6 +203,21 @@ export function HeroSection() {
             strokeLinecap="round"
           />
         </svg>
+
+        <div className="hero-fade mt-6 max-w-2xl space-y-3 text-sm leading-relaxed text-white/70 md:text-base">
+          {heroBioIntro.map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+          <button
+            onClick={scrollToAbout}
+            className="inline-flex items-center gap-1.5 font-bold uppercase tracking-widest text-teal hover:underline"
+          >
+            Read More
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M12 4v16m0 0l-6-6m6 6l6-6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-3 md:gap-4">
           <span className="hero-fade border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 md:text-sm">
