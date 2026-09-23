@@ -175,6 +175,30 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/45 to-[#0a0a0b]/55" />
       </div>
 
+      {/* Sound toggle — pinned to the video's corner, outside the parallax
+          wrapper so it doesn't drift on scroll. Self-hosted clips only;
+          unmuting restarts from the top. */}
+      {source.kind === 'file' && (
+        <button
+          type="button"
+          onClick={toggleSound}
+          aria-label={muted ? 'Unmute video (restarts from the beginning)' : 'Mute video'}
+          className="absolute right-5 top-20 z-20 flex h-10 w-10 items-center justify-center border-2 border-white/25 bg-[#0a0a0b]/60 text-white/85 backdrop-blur-sm transition-colors hover:border-teal hover:text-teal md:right-10 md:top-24"
+        >
+          {muted ? (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
+              <path d="M22 9l-6 6M16 9l6 6" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
+              <path d="M15.5 8.5a5 5 0 010 7M18.5 6a9 9 0 010 12" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      )}
+
       {/* Content */}
       <div className="hero-content relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 md:px-10 md:pb-20">
         <p className="hero-fade mb-3 font-hand text-2xl text-teal md:text-3xl">
@@ -229,29 +253,6 @@ export function HeroSection() {
           <span className="hero-fade border-2 border-teal/70 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-teal md:text-sm">
             100% funny
           </span>
-
-          {/* Sound toggle — self-hosted clips only; unmuting restarts from the top */}
-          {source.kind === 'file' && (
-            <button
-              type="button"
-              onClick={toggleSound}
-              aria-label={muted ? 'Unmute video (restarts from the beginning)' : 'Mute video'}
-              className="hero-fade group flex items-center gap-2.5 border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 transition-colors hover:border-teal hover:text-teal md:text-sm"
-            >
-              {muted ? (
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
-                  <path d="M22 9l-6 6M16 9l6 6" strokeLinecap="round" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
-                  <path d="M15.5 8.5a5 5 0 010 7M18.5 6a9 9 0 010 12" strokeLinecap="round" />
-                </svg>
-              )}
-              <span>{muted ? 'Sound on' : 'Mute'}</span>
-            </button>
-          )}
         </div>
 
         {/* Playlist — only shows once the dashboard has more than one video */}
