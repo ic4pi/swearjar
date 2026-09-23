@@ -11,6 +11,7 @@ import {
   HeroSection,
   ShowsSection,
   AboutSection,
+  AboutStatsSection,
   CtaSection,
   ProductsSection,
   PhotosSection,
@@ -77,6 +78,8 @@ export default function Home() {
         />
 
         <AboutSection />
+        <ProductsSection />
+        <AboutStatsSection />
         <CtaSection onDonate={() => setDonateOpen(true)} onContact={() => setContactOpen(true)} />
 
         <Marquee
@@ -84,7 +87,6 @@ export default function Home() {
           textClassName="text-2xl md:text-4xl text-white/70"
         />
 
-        <ProductsSection />
         <PhotosSection />
         <Footer />
       </main>

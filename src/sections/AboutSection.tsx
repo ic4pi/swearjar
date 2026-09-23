@@ -5,12 +5,6 @@ import { aboutMeText } from '@/data/siteData';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const STATS = [
-  { big: '1 in 100', small: "school-aged kids have Tourette's Syndrome" },
-  { big: '~10%', small: "of people with TS swear — it's not the punchline you think" },
-  { big: '1', small: 'laugh at a time. That\'s how awareness spreads' },
-];
-
 export function AboutSection() {
   const root = useRef<HTMLElement>(null);
 
@@ -42,20 +36,6 @@ export function AboutSection() {
           }
         );
       });
-      gsap.utils.toArray<HTMLElement>('.stat-block').forEach((el, i) => {
-        gsap.fromTo(
-          el,
-          { opacity: 0, scale: 0.92 },
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.7,
-            delay: i * 0.12,
-            ease: 'back.out(1.4)',
-            scrollTrigger: { trigger: el, start: 'top 90%' },
-          }
-        );
-      });
     }, root);
     return () => ctx.revert();
   }, []);
@@ -83,22 +63,13 @@ export function AboutSection() {
           </div>
         </div>
 
-        {/* Bio + stats */}
+        {/* Bio */}
         <div className="lg:col-span-8">
           {aboutMeText.split('\n\n').map((para, i) => (
             <p key={i} className="about-line mb-6 max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl">
               {para}
             </p>
           ))}
-
-          <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {STATS.map((s) => (
-              <div key={s.big} className="stat-block border-2 border-white/15 p-6 transition-colors duration-300 hover:border-teal/60">
-                <div className="font-display text-4xl text-teal md:text-5xl">{s.big}</div>
-                <p className="mt-3 text-sm leading-snug text-white/65">{s.small}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
