@@ -42,11 +42,15 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
-    /* One maximalist background art piece behind the whole page, tinted
-       down and fixed - sections stack translucently on top of it instead
-       of each carrying its own copy. */
+    /* One background art piece behind the whole page, fixed so sections
+       stack translucently on top of it instead of each carrying its own
+       copy. The watermark PNG itself already carries the real dimming:
+       its white line-art was pre-processed down to ~30% alpha so it reads
+       as a quiet pattern, while its teal ribbons were left near-opaque so
+       they're the one thing that visibly pops. This gradient only adds a
+       light, uniform tint on top so nothing overrides that balance. */
     background-image:
-      linear-gradient(hsl(var(--background) / 0.88), hsl(var(--background) / 0.88)),
+      linear-gradient(hsl(var(--background) / 0.72), hsl(var(--background) / 0.72)),
       url('/tic-happens-watermark.png');
     background-size: cover;
     background-position: center top;
