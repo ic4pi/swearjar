@@ -161,7 +161,7 @@ async function fetchVariantSkus(base: string, key: string, id: string): Promise<
 
 const PRODUCT_ENDPOINTS = [
   { path: "/product/products", method: "GET" },
-  { path: "/product/external/products", method: "" },
+  { path: "/product/external/products", method: "GET" },
   { path: "/catalog/external/products", method: "GET" },
   { path: "/products", method: "GET" },
   { path: "/product/search", method: "POST" },
