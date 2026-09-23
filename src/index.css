@@ -159,12 +159,21 @@
    sit fixed on <body>, which pins the same crop to the viewport no matter
    which section is on screen. Instead each section that wants the art
    carries its own copy of this class and picks which vertical band shows
-   through --wm-pos, so scrolling the page actually tours the artwork. */
+   through --wm-pos, so scrolling the page actually tours the artwork.
+
+   background-size is locked to the section's WIDTH only (100% auto), never
+   `cover`. `cover` sizes against the section's own box, and on mobile a
+   two-column section collapses to one column - narrow and very tall - so
+   `cover` locks onto that height and blows the image's width up by several
+   hundred percent to fill it. Sizing off width alone keeps the zoom level
+   identical at every breakpoint regardless of how tall the content stack
+   gets; a section taller than the scaled image just shows flat background
+   past it, which is fine for a quiet watermark. */
 .watermark-bg {
   background-image:
     linear-gradient(hsl(var(--background) / 0.72), hsl(var(--background) / 0.72)),
     url('/tic-happens-watermark.png');
-  background-size: cover;
+  background-size: 100% auto;
   background-repeat: no-repeat;
   background-position: var(--wm-pos, center top);
 }
