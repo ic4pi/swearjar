@@ -1,255 +1,190 @@
-import { useEffect, useRef, useState } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Play, ExternalLink, ChevronDown, Calendar, MapPin } from 'lucide-react';
-import { useVideos, useShows } from '@/hooks/useSiteData';
-import { getNextThreeShows } from '@/utils/showUtils';
-import { getVideoSource } from '@/utils/videoUtils';
+import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { trpc } from "@/providers/trpc";
+import { FALLBACK_SETTINGS } from "@/lib/site";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Hero keeps its own playlist small - realistically 1-2 videos, 3 at most.
-// The full list lives further down the page in "Watch the Set".
-const HERO_MAX_VIDEOS = 3;
+const DEFAULT_VIDEO = "/video/zach-kill-tony.mp4";
+const DEFAULT_POSTER = "/video/zach-kill-tony-poster.jpg";
 
+/**
+ * Full-screen video hero. Streams Zach's Kill Tony clip as a moving,
+ * full-bleed backdrop (object-fit cover — always the whole frame,
+ * never a freeze-frame close-up). The URL comes from the dashboard
+ * (Settings → Hero video URL). Giant display type reveals character by
+ * character, the video drifts with parallax on scroll.
+ */
 export function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const videoGalleryRef = useRef<HTMLDivElement>(null);
-  const blurbRef = useRef<HTMLDivElement>(null);
-  // A YouTube iframe used as an ambient background shows its own title/
-  // controls/logo no matter what params are passed - controls=0 isn't
-  // reliably honored on mobile - so a YouTube video only plays once
-  // someone actually presses play, and its own chrome is then expected.
-  // A self-hosted file has no such problem and autoplays muted+looped
-  // straight away, same as any other ambient background video.
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const { videos } = useVideos();
-  const { shows } = useShows();
-  const nextTwoShows = getNextThreeShows(shows).slice(0, 2);
+  const root = useRef<HTMLElement>(null);
+  const videoWrap = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { data } = trpc.site.publicSettings.useQuery(undefined, { retry: 1 });
+  const settings = { ...FALLBACK_SETTINGS, ...(data ?? {}) };
 
-  const heroVideos = videos.slice(0, HERO_MAX_VIDEOS);
-  const safeIndex = heroVideos.length > 0 ? Math.min(activeVideoIndex, heroVideos.length - 1) : 0;
-  const heroVideo = heroVideos[safeIndex];
-  const heroSource = getVideoSource(heroVideo);
-  const heroEmbedSrc = heroSource.kind === 'youtube' ? `https://www.youtube.com/embed/${heroSource.id}?autoplay=1&playsinline=1` : null;
+  const videoUrl = settings.heroVideoUrl?.trim() || DEFAULT_VIDEO;
+  const isLocal = videoUrl.startsWith("/");
+  const [muted, setMuted] = useState(true);
 
-  const selectVideo = (index: number) => {
-    setActiveVideoIndex(index);
-    setIsPlaying(false);
-  };
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-
-    const ctx = gsap.context(() => {
-      // Initial load animation
-      const loadTl = gsap.timeline({ delay: 0.2 });
-
-      // Video gallery entrance
-      loadTl.fromTo(
-        videoGalleryRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }
-      );
-
-      // Blurb entrance
-      loadTl.fromTo(
-        blurbRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' },
-        '-=0.3'
-      );
-
-      // Scroll-driven exit animation
-      const scrollTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: '+=150%', // Increased from 130% to accommodate sneak peek
-          pin: true,
-          scrub: 0.6,
-        },
-      });
-
-      // ENTRANCE (0-30%): Hold position (already animated on load)
-      // SETTLE (30-70%): Static
-      // EXIT (70-100%): Elements exit
-
-      scrollTl.fromTo(
-        videoGalleryRef.current,
-        { y: 0, opacity: 1 },
-        { y: '-10vh', opacity: 0.3, ease: 'power2.in' },
-        0.7
-      );
-
-      scrollTl.fromTo(
-        blurbRef.current,
-        { y: 0, opacity: 1 },
-        { y: '5vh', opacity: 0.3, ease: 'power2.in' },
-        0.72
-      );
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, []);
-
-  const scrollToAbout = () => {
-    const aboutSection = document.getElementById('about');
-    if (aboutSection) {
-      aboutSection.scrollIntoView({ behavior: 'smooth' });
+  const toggleSound = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (muted) {
+      // Unmuting is a deliberate gesture — restart the clip from the top
+      // so the audio lands from the beginning, not mid-sentence.
+      v.currentTime = 0;
+      v.muted = false;
+      v.play().catch(() => {});
+      setMuted(false);
+    } else {
+      v.muted = true;
+      setMuted(true);
     }
   };
 
+  // Keep the video actually playing even if autoplay gets blocked
+  // or a later render leaves it paused.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (v) {
+      v.muted = true;
+      v.play().catch(() => {});
+    }
+  }, [videoUrl]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".hero-char",
+        { yPercent: 110, opacity: 0, filter: "blur(12px)" },
+        {
+          yPercent: 0,
+          opacity: 1,
+          filter: "blur(0px)",
+          duration: 0.9,
+          ease: "power4.out",
+          stagger: 0.035,
+          delay: 0.25,
+        }
+      );
+      gsap.fromTo(
+        ".hero-fade",
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out", stagger: 0.12, delay: 1 }
+      );
+      gsap.to(".squiggle-path", {
+        strokeDashoffset: 0,
+        duration: 1.4,
+        ease: "power2.inOut",
+        delay: 1.4,
+      });
+      gsap.to(videoWrap.current, {
+        yPercent: 18,
+        scale: 1.08,
+        ease: "none",
+        scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true },
+      });
+      gsap.to(".hero-content", {
+        yPercent: -22,
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: { trigger: root.current, start: "top top", end: "70% top", scrub: true },
+      });
+    }, root);
+    return () => ctx.revert();
+  }, []);
+
+  const name = "ZACHARIAH TIPPETT";
+
   return (
-    <section
-      ref={sectionRef}
-      id="hero"
-      className="section-pinned flex flex-col z-10"
-    >
-      {/* Main Content Container */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 lg:px-8 pt-28 lg:pt-36 pb-12 lg:pb-16">
+    <section ref={root} id="top" className="relative flex h-[100svh] items-end overflow-hidden">
+      {/* Video backdrop — full-bleed, always in motion */}
+      <div ref={videoWrap} className="absolute inset-0 will-change-transform">
+        <video
+          ref={videoRef}
+          key={videoUrl}
+          className="absolute inset-0 h-full w-full object-cover"
+          src={videoUrl}
+          poster={isLocal ? DEFAULT_POSTER : undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/45 to-[#0a0a0b]/55" />
+      </div>
 
-        {/* Headline */}
-        <div className="text-center mb-6 lg:mb-8">
-          <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-7xl tracking-tight leading-none drop-shadow-lg">
-            <span className="text-white">MEET</span> <span className="text-primary">ZACHARIAH</span>
-          </h1>
-        </div>
+      {/* Content */}
+      <div className="hero-content relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-16 md:px-10 md:pb-20">
+        <p className="hero-fade mb-3 font-hand text-2xl text-teal md:text-3xl">
+          stand-up comic · tourette's advocate
+        </p>
 
-        {/* Video Gallery - Main Feature */}
-        <div
-          ref={videoGalleryRef}
-          className="relative w-full max-w-5xl mb-4"
-        >
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white/10 bg-black">
-            {heroSource.kind === 'file' ? (
-              <video
-                key={heroSource.url}
-                autoPlay
-                muted
-                loop
-                playsInline
-                poster={heroVideo?.thumbnail}
-                className="absolute inset-0 w-full h-full object-cover"
-              >
-                <source src={heroSource.url} type="video/mp4" />
-              </video>
-            ) : isPlaying && heroEmbedSrc ? (
-              <iframe
-                key={heroSource.kind === 'youtube' ? heroSource.id : undefined}
-                src={heroEmbedSrc}
-                title={heroVideo?.title || 'Stand-up clip'}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                frameBorder="0"
-              />
+        <h1 className="display-xl overflow-hidden" aria-label={name}>
+          {name.split("").map((ch, i) =>
+            ch === " " ? (
+              <span key={i} className="inline-block w-[0.35em]" />
             ) : (
-              <>
-                <img
-                  src={heroVideo?.thumbnail || '/video_reel.jpg'}
-                  alt={heroVideo?.title || 'Stand-up clip'}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                {heroSource.kind === 'youtube' && (
-                  <button
-                    onClick={() => setIsPlaying(true)}
-                    className="absolute inset-0 flex items-center justify-center group"
-                    aria-label="Play video"
-                  >
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                    <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-primary/90 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-primary">
-                      <Play className="w-8 h-8 lg:w-10 lg:h-10 text-primary-foreground ml-1" fill="currentColor" />
-                    </div>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Small playlist - hero stays capped at HERO_MAX_VIDEOS; the full
-              list is further down the page in "Watch the Set". */}
-          {heroVideos.length > 1 && (
-            <div className="flex justify-center gap-3 mt-4">
-              {heroVideos.map((video, index) => (
-                <button
-                  key={video.id}
-                  onClick={() => selectVideo(index)}
-                  className={`shrink-0 w-24 sm:w-28 text-left rounded-lg overflow-hidden border-2 transition-colors ${
-                    index === safeIndex ? 'border-primary' : 'border-transparent hover:border-border'
-                  }`}
-                >
-                  <div className="aspect-video bg-muted">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </button>
-              ))}
-            </div>
+              <span key={i} className="hero-char inline-block will-change-transform" aria-hidden>
+                {ch}
+              </span>
+            )
           )}
+        </h1>
 
-          {/* Intro blurb - sits below the video so nothing covers the footage */}
-          <div ref={blurbRef} className="max-w-3xl mx-auto mt-6 text-center">
-            <p className="text-foreground text-base sm:text-lg lg:text-xl font-bold leading-relaxed mb-3">
-              Hello Humans! my name is Zachariah Tippett but, you can call me Tourette&apos;s and I have Tourette&apos;s Syndrome
-            </p>
+        <svg viewBox="0 0 420 24" className="mt-2 h-6 w-64 md:w-96" aria-hidden>
+          <path
+            className="squiggle-path"
+            d="M4 14 C 60 4, 110 22, 165 12 S 285 4, 330 14 S 400 10, 416 12"
+            fill="none"
+            stroke="#42c8e3"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+        </svg>
 
-            {/* Links Row */}
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="https://www.google.com/search?q=Zachariah+Tippett"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Google Me
-              </a>
-
-              <span className="text-muted-foreground">|</span>
-
-              <button
-                onClick={scrollToAbout}
-                className="inline-flex items-center gap-2 text-primary font-bold hover:underline transition-all"
-              >
-                Read More
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Upcoming shows - 2 widgets, responsive positioning */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6 max-w-2xl mx-auto">
-            {nextTwoShows.map((show) => (
-              <a
-                key={show.id}
-                href={show.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3 bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-primary font-bold text-xs">
-                    <Calendar className="w-3.5 h-3.5 shrink-0" />
-                    <span>{show.date}</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                    {show.venue}
-                  </h4>
-                  <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                    <MapPin className="w-3 h-3 shrink-0" />
-                    <span className="truncate">{show.location}</span>
-                  </div>
-                </div>
-                <ExternalLink className="w-4 h-4 shrink-0 text-muted-foreground group-hover:text-primary" />
-              </a>
-            ))}
-          </div>
+        <div className="mt-8 flex flex-wrap items-center gap-3 md:gap-4">
+          <span className="hero-fade border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 md:text-sm">
+            1 in 100 kids have TS
+          </span>
+          <span className="hero-fade border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 md:text-sm">
+            Only ~10% swear
+          </span>
+          <span className="hero-fade border-2 border-teal/70 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-teal md:text-sm">
+            100% funny
+          </span>
         </div>
+      </div>
+
+      {/* Sound toggle — unmuting restarts the clip from the top */}
+      <button
+        type="button"
+        onClick={toggleSound}
+        aria-label={muted ? "Unmute video (restarts from the beginning)" : "Mute video"}
+        className="hero-fade group absolute bottom-6 left-5 z-10 flex items-center gap-2.5 border-2 border-white/25 bg-[#0a0a0b]/60 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-white/85 backdrop-blur-sm transition-colors hover:border-teal hover:text-teal md:left-10"
+      >
+        {muted ? (
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
+            <path d="M22 9l-6 6M16 9l6 6" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M11 5L6 9H3v6h3l5 4V5z" strokeLinejoin="round" />
+            <path d="M15.5 8.5a5 5 0 010 7M18.5 6a9 9 0 010 12" strokeLinecap="round" />
+          </svg>
+        )}
+        <span>{muted ? "Sound on" : "Mute"}</span>
+      </button>
+
+      {/* Scroll cue */}
+      <div className="hero-fade absolute bottom-6 right-6 z-10 hidden md:flex flex-col items-center gap-2 text-white/60">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.3em] [writing-mode:vertical-lr]">scroll</span>
+        <svg viewBox="0 0 24 24" className="h-5 w-5 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 4v16m0 0l-6-6m6 6l6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </section>
   );
