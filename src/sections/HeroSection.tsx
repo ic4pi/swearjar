@@ -243,17 +243,6 @@ export function HeroSection() {
           </button>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3 md:gap-4">
-          <span className="hero-fade border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 md:text-sm">
-            1 in 100 kids have TS
-          </span>
-          <span className="hero-fade border-2 border-white/25 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/85 md:text-sm">
-            Only ~10% swear
-          </span>
-          <span className="hero-fade border-2 border-teal/70 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-teal md:text-sm">
-            100% funny
-          </span>
-        </div>
 
         {/* Playlist — only shows once the dashboard has more than one video */}
         {heroVideos.length > 1 && (
