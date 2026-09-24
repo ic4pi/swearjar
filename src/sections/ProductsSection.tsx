@@ -17,7 +17,7 @@ const CATEGORY_META = {
   funny: {
     hand: 'for the laughs',
     title: 'Just Funny',
-    tagline: 'No cause, no message — just funny hoodie designs.',
+    tagline: 'Just funny hoodie designs.',
   },
   accessories: {
     hand: 'random sh*t',
