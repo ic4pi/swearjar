@@ -12,7 +12,7 @@ const CATEGORY_META = {
   activism: {
     hand: 'for the mission',
     title: 'Multipurpose Apparel',
-    tagline: 'Designs with something to say. Select designs also come as a T-shirt.',
+    tagline: 'Designs with something to say.',
   },
   funny: {
     hand: 'for the laughs',
